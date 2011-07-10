@@ -1,0 +1,3 @@
+#!/bin/bash
+erl -make
+erl -pa ebin -I deps/*/include -config drago.config -s game_runner -boot start_sasl -name drago@127.0.0.1
