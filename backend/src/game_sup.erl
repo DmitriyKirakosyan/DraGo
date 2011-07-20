@@ -9,4 +9,7 @@ start_link()->
 init([]) ->
     {ok, Port} = application:get_env(game_app, listen_port),
     SocketServer = {game_acceptor, {game_acceptor, start_link, [drago, Port]}, permament, 5000, worker, dynamic},
-    {ok, {{one_for_one, 1, 1}, [SocketServer]}}.
+    
+		GameSession = {session_manager, {session_manager, start_link, []}, permament, ?interval, worker, dynamic},
+
+		{ok, {{one_for_one, 1, 1}, [SocketServer, GameSession]}}.
