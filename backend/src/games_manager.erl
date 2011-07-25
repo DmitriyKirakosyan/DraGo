@@ -1,5 +1,6 @@
 -module(games_manager).
 -export([start_link/0]).
+-export([get_game/1, get_partner/1]).
 
 -include("game.hrl").
 
@@ -8,7 +9,7 @@ start_link() ->
     case register(games_manager, Pid) of
 				true ->
 						{ok, Pid};
-				False ->
+				_ ->
 						{error, cant_register_game_manager}
     end.
 
@@ -18,7 +19,7 @@ start() ->
 loop(Games) ->
     receive
 				{get_game, UserId, From} when is_binary(UserId) ->
-						From ! findGame(UseId, Games),
+						From ! findGame(UserId, Games),
 						loop(Games);
 				{register, UserId, StonesColor} when is_binary(StonesColor) ->
 						case StonesColor of
@@ -31,7 +32,7 @@ loop(Games) ->
 						loop(Games)
     end.
 
-get_game(UseId) ->
+get_game(UserId) ->
     games_manager ! {get_game, UserId, self()},
     receive
 				{ok, Game} ->
@@ -42,16 +43,14 @@ get_game(UseId) ->
 						{error, timeout}
     end.
 
-get_partner(UseId) ->
+get_partner(UserId) ->
 		games_manager ! {get_game, UserId, self()},
 		receive {ok, Game} ->
 						case Game#game.player_white =:= UserId of
 								true ->
 										Game#game.player_black;
 								false ->
-										game#game.player_white;
-								_ ->
-										{error, bad_match_dima_idiot}
+										Game#game.player_white
 						end
 		after 1000 ->
 						{error, none}

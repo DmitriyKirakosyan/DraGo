@@ -43,7 +43,7 @@ parse_event(Sock, HandleFunction) ->
 		end.
 
 
-send_event({Action_id, Response}, Sock) when is_integer(Action_id) andalso Action_id >= 0 andalso Action_id =< 4228250625 andalso is_binary(Response) ->
+send_event(Sock, {Action_id, Response}) when is_integer(Action_id) andalso Action_id >= 0 andalso Action_id =< 4228250625 andalso is_binary(Response) ->
   Message =  <<Action_id:(4 bsl 3), (erlang:size(Response)):64, Response/binary>>,
   gen_tcp:send(Sock, Message).
 

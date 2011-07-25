@@ -4,7 +4,7 @@
 
 -include("game.hrl").
 
-handle_event(<<"move">>, UserId,  Params) when is_record(Move, game_move) ->
+handle_event(<<"move">>, UserId,  Params) when is_binary(UserId) ->
     X = proplists:get_value(<<"x">>, Params),
     Y = proplists:get_value(<<"y">>, Params),
     set_move(UserId, #game_move{x=X, y=Y}).

@@ -3,6 +3,8 @@
 -behaviour(supervisor).
 -export([start_link/0, init/1]).
 
+-define(interval, 5000).
+
 start_link()->
     supervisor:start_link(?MODULE, []).
 
