@@ -13,7 +13,7 @@ start_session(UserId, Sock) ->
 
 loop(GameSession) ->
 		erlang:garbage_collect(self()),
-		case game_protocol:parse_event(GameSession#session.sock) of
+		case game_protocol:parse_event(GameSession#session.sock, ?interval) of
 				{ok, {ActionId, Request}} ->
 						handle_event(GameSession, ActionId, Request),
 						loop(GameSession);
