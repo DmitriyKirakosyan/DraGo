@@ -12,7 +12,7 @@ authorize(Sock, Module) ->
 
 start_game(Sock, Module) ->
     case game_protocol:parce_event(Sock) of
-				{ok, {ActionId, FirstRequest}} ->
+				{ok, {_ActionId, FirstRequest}} ->
 						UserId = proplists:get_value(<<"user_id">>, FirstRequest),
 						Module:start_session(UserId, Sock);
 				_ ->

@@ -57,7 +57,7 @@ get_partner(UserId) ->
 		end.
 
 
-findGame(UserId, []) ->
+findGame(_UserId, []) ->
     {error, not_exists};
 findGame(UserId, [Game|Games]) when is_record(Game, game) ->
     case inGame(UserId, Game) of

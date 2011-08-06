@@ -6,5 +6,5 @@
 start(_, _) ->
     game_sup:start_link().
 
-stop(_) ->
+stop(_State) ->
     ok.
