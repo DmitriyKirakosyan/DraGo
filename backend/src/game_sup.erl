@@ -11,7 +11,7 @@ start_link()->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init([]) ->
-    {ok, Port} = application:get_env(game_app, listen_port),
+    {ok, Port} = application:get_env(drago, listen_port),
     SocketServer = {game_acceptor, {game_acceptor, start_link, [drago, Port]}, permanent, 5000, worker, dynamic},
 		Web = web_specs(drago_web, 4444),
 		GameDB = {game_db, {game_db, start_link, []}, permanent, 5000, worker, dynamic},
@@ -23,7 +23,7 @@ web_specs(Mod, Port) ->
 		Ip = case os:getenv("MOCHIWEB_IP") of false -> "0.0.0.0"; Any -> Any end,
     WebConfig = [{ip, Ip},
                  {port, Port},
-                 {docroot, mysteryville_deps:local_path(["priv", "www"])}],
+                 {docroot, drago_deps:local_path(["priv", "www"])}],
     {Mod,
      {Mod, start, [WebConfig]},
      permanent, 5000, worker, dynamic}.
