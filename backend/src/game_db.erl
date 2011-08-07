@@ -6,7 +6,7 @@
 
 -include("mongo_protocol.hrl").
 
--define(db_name, mysteryville).
+-define(db_name, drago).
 
 start_link() ->
     Pid = spawn_link(fun connect/0),

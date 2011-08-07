@@ -1,2 +1,7 @@
 *~
 /backend/ebin
+.actionScriptProperties
+.project
+.settings/
+imgs/
+bin-debug/
