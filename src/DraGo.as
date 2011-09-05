@@ -10,13 +10,9 @@ package {
 		private var _menu:MainMenu;
 		
 		public function DraGo() {
-			addMenu();
-			new RpcTest(_menu);
-		}
-		
-		private function addMenu():void {
 			_menu = new MainMenu();
 			this.addChild(_menu);
+			new RpcTest(_menu);
 		}
 	}
 }

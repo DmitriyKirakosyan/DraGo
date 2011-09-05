@@ -1,7 +1,0 @@
-#!/bin/bash
-erl -make
-erl -pa ebin deps/*/ebin -I include deps/*/include \
-		-config drago.config \
-		-s game_runner \
-		-boot start_sasl \
-		-name drago@127.0.0.1
