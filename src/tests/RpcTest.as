@@ -30,23 +30,19 @@ package tests {
 		private function drawInterface():void {
 			tfNumber1 = new TextField();
 			tfNumber1.autoSize = TextFieldAutoSize.LEFT;
-			tfNumber1.text = "5";
+			tfNumber1.text = "hi here";
 			tfNumber1.x = 0; tfNumber1.y = 10;
 			tfNumber2 = new TextField();
 			tfNumber2.autoSize = TextFieldAutoSize.LEFT;
-			tfNumber2.text = "5";
+			tfNumber2.text = "hihi";
 			tfNumber2.x = 0; tfNumber2.y = 20;
-			tfResult = new TextField();
-			tfResult.autoSize = TextFieldAutoSize.LEFT;
-			tfResult.x = 0; tfResult.y = 40;
 			_container.addChild(tfNumber1);
 			_container.addChild(tfNumber2);
-			_container.addChild(tfResult);
 		}
 		
 		private function sendToRpc():void {
-			GameRpc.instance.init("127.0.0.1", 4444);
-			GameRpc.instance.send({num1:tfNumber1.text, num2:tfNumber2.text}, onResponse);
+			//GameRpc.instance.init("127.0.0.1", 4444);
+			//GameRpc.instance.send({num1:tfNumber1.text, num2:tfNumber2.text}, onResponse);
 		}
 		
 		private function onResponse(data:String):void {
