@@ -1,4 +1,4 @@
-package {
+package controller{
 
 import flash.display.DisplayObject;
 import flash.display.DisplayObjectContainer;
