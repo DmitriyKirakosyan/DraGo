@@ -7,12 +7,10 @@ import flash.display.Sprite;
 
 import scene.SceneController;
 
-import tests.RpcTest;
-	
-	[SWF(width=512, height=384, frameRate=25)]
+	[SWF(width=600, height=480, frameRate=40)]
 	public class Main extends Sprite {
-		public static const WIDTH:Number = 512;
-		public static const HEIGHT:Number = 384;
+		public static const WIDTH:Number = 600;
+		public static const HEIGHT:Number = 480;
 
 		private var _sceneController:SceneController;
 		

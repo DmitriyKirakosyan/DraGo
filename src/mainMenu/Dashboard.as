@@ -31,11 +31,12 @@ public class Dashboard extends ViewController {
 		private function addText():void {
 			var textField:TextField = new TextField();
 			var textFormat:TextFormat = new TextFormat(null, 16);
+			textField.y = 10;
 			textField.selectable = false;
 			textField.width = 200;
 			textField.wordWrap = true;
 			textField.defaultTextFormat = textFormat;
-			textField.text = "welcome to DraGo game, click start button to begin the game";
+			textField.text = "Welcome to DraGo, click start button to begin the game";
 			_container.addChild(textField);
 		}
 		

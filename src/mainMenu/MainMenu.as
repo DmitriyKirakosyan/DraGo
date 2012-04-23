@@ -21,6 +21,8 @@ public class MainMenu extends ViewController implements IScene {
 	}
 
 	public function open():void {
+		view.width = Main.WIDTH;
+		view.height = Main.HEIGHT;
 		_container.addChild(view);
 		_container.addChild(_startButton);
 		addListeners();
