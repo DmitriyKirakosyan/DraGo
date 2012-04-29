@@ -2,8 +2,12 @@ package {
 import controller.GameController;
 
 import flash.display.Sprite;
-	
-	import mainMenu.MainMenu;
+
+import game.player.PlayerVO;
+
+import game.staticModel.MatchInfo;
+
+import mainMenu.MainMenu;
 
 import scene.SceneController;
 
@@ -25,6 +29,9 @@ import scene.SceneController;
 			_sceneController.addScene(menuScene, true);
 			_sceneController.addScene(gameScene);
 			_sceneController.addSceneDependence(menuScene, gameScene, true);
+
+			MatchInfo.instance.whitePlayer = new PlayerVO(true);
+			MatchInfo.instance.blackPlayer = new PlayerVO(true);
 		}
 	}
 }
