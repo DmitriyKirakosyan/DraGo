@@ -32,7 +32,7 @@ public class GameController extends EventDispatcher implements IScene {
 
 	private var _playerToMove:Player;
 
-	public static const ROWS_NUM:int = 13;
+	public static const ROWS_NUM:int = 11;
 
 	public function GameController(container:Sprite):void {
 		_container = container;

@@ -14,8 +14,8 @@ import game.stone.StoneVO;
 import game.stone.StoneView;
 
 public class BoardView extends Sprite {
-	public static const CELL_WIDTH:Number = 30;
-	public static const CELL_HEIGHT:Number = 30;
+	public static const CELL_WIDTH:Number = 40;
+	public static const CELL_HEIGHT:Number = 40;
 	public static const BORDER_WIDTH:Number = 20;
 
 	private var _stones:Vector.<StoneView>;

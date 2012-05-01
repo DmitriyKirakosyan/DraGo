@@ -1,0 +1,9 @@
+%% -*- erlang -*-
+{application, batoo,
+ [{description, "batoo"},
+  {vsn, "0.1"},
+  {modules, []},
+  {registered, []},
+  {mod, {'batoo_app', []}},
+  {env, []},
+  {applications, [kernel, stdlib, crypto]}]}.

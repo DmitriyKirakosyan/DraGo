@@ -47,6 +47,7 @@ public class GameModel {
 	}
 
 	private function findDeadStones():Vector.<StoneVO> {
+		var result:Vector.<StoneVO> = new Vector.<StoneVO>();
 		var x:int = _lastStoneVO.x;
 		var y:int = _lastStoneVO.y;
 		var loopX:int;
@@ -58,11 +59,12 @@ public class GameModel {
 			if (validPoint(loopX, loopY) && _matrix[loopX][loopY] && _matrix[loopX][loopY].color != _lastStoneVO.color) {
 				findDeadStonesWithStone(_matrix[loopX][loopY].color, _matrix[loopX][loopY], deadStones);
 				if (deadStones && deadStones.length > 0) {
-					return deadStones;
+					result = result.concat(deadStones);
+					//return deadStones;
 				}
 			}
 		}
-		return deadStones;
+		return result;
 	}
 
 	private function findDeadStonesWithStone(color:uint, stoneVO:StoneVO, deadStones:Vector.<StoneVO>,
@@ -93,7 +95,7 @@ public class GameModel {
 	}
 
 	private function validPoint(x:int, y:int):Boolean {
-		return x >=0 && x <= GameController.ROWS_NUM && y >= 0 && y <= GameController.ROWS_NUM;
+		return x >=0 && x < GameController.ROWS_NUM && y >= 0 && y < GameController.ROWS_NUM;
 	}
 }
 }
