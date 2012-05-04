@@ -6,8 +6,11 @@ import flash.display.Sprite;
 import game.player.PlayerVO;
 
 import game.staticModel.MatchInfo;
+import game.staticModel.UserState;
 
 import mainMenu.MainMenu;
+
+import rpc.GameRpc;
 
 import scene.SceneController;
 
@@ -19,7 +22,13 @@ import scene.SceneController;
 		private var _sceneController:SceneController;
 		
 		public function Main() {
+			GameRpc.instance.init("localhost", 8080);
+			GameRpc.instance.authorize(onAuthorizeComplete);
 			addScenes();
+		}
+
+		private function onAuthorizeComplete(result:Object):void {
+			UserState.instance.init(result.toString());
 		}
 
 		private function addScenes():void {

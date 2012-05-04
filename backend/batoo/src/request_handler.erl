@@ -6,6 +6,9 @@
 
 %% -spec handle(binary(), typle(), UserState) -> {ok, NewUserState, Reply}.
 
+handle(<<"get_state">>, _RequestData, UserState) ->
+    {ok, UserState, {ok, [{users_online, 0}]}};
+
 handle(<<"create_request">>, RequestData, UserState) ->
     FriendUserId = proplists:get_value(<<"friend_user_id">>, RequestData),
     Reply = game_room:create_request(UserState#user_state.user_id, FriendUserId),
@@ -20,4 +23,4 @@ handle(<<"approve_request">>, RequestData, UserState) ->
             {ok, UserState, {error, cant_started}}
     end;
 
-handle(_, _, UserState) -> {ok, UserState}.
+handle(_, _, UserState) -> {ok, UserState, {ok, empty}}.

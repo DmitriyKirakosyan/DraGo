@@ -11,6 +11,7 @@ package rpc {
 		private var errbacks:Dictionary = new Dictionary();
 		
 		private var _rpc:RpcHttp;
+		//private var connected:Boolean = false;
 		private var userId:String;
 		private var authKey:String;
 		
@@ -28,14 +29,35 @@ package rpc {
 			_rpc = new RpcHttp(host, port);
 		}
 		
-		public function connect(userId:String, authKey:String, debug:Boolean = false):void {
-			this.userId = userId;
-			this.authKey = authKey;
-			if (_rpc) { _rpc.send_test(); }
+		public function authorize(callback:Function =null, errback:Function=null):void {
+			_rpc.send("{" + getRequestString("authorize") + "}",
+			function(result:Object):void {
+				authKey = result.toString();
+				if (callback) { callback(result); }
+			});
+		}
+
+		public function getState(callback:Function):void {
+			_rpc.send("{" + getRequestString("get_state") + "}", callback);
+		}
+
+		public function buyTown(id:String, x:int, y:int, callback:Function):void {
+			var objectInfo:String = "\"id\" : " + id + ", \"x\" : " + x + ", \"y\" : " + y;
+			_rpc.send("{" + getRequestString("buy_town") + ", " + objectInfo + "}", callback);
 		}
 
 		public function send(request:Object, callback:Function=null, errback:Function=null):void {
 			_rpc.send(JSON.encode(request), callback);
+		}
+
+		/* Internal functions */
+
+		private function getRequestString(requestName:String):String {
+			var result:String = "\"request\" : \"" + requestName + "\"";
+			if (authKey && authKey != "") {
+				result += ", \"session_key\": \"" + authKey + "\"";
+			}
+			return result;
 		}
 		
 	}

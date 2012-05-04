@@ -95,8 +95,8 @@ handle_request(SessionKey, Request) ->
         {error, no_session} ->
             {error, no_session};
         {ok, Pid} ->
-            RequestName = binary_to_atom(proplists:get_value(<<"request_name">>, Request), utf8),
-            gen_server:call(Pid, {RequestName, proplists:delete(<<"request_name">>, Request)})
+            RequestName = proplists:get_value(<<"request">>, Request),
+            gen_server:call(Pid, {RequestName, proplists:delete(<<"request">>, Request)})
     end.
 
 %%%===================================================================

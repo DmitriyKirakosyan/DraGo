@@ -56,12 +56,12 @@ loop(Req, DocRoot) ->
 
 request_handler(Request) ->
     io:format("Request : ~p~n", [Request]),
-    case proplists:get_value(<<"request_name">>, Request) of
+    case proplists:get_value(<<"request">>, Request) of
         <<"authorize">> ->
-            game_session_manager:run_session();
+            session_manager:run_session();
         _ ->
             SessionKey = proplists:get_value(<<"session_key">>, Request, <<>>),
-            game_session_manager:handle_request(SessionKey, proplists:delete(<<"session_key">>, Request))
+            session_manager:handle_request(SessionKey, proplists:delete(<<"session_key">>, Request))
     end.
 
 %% Internal API
