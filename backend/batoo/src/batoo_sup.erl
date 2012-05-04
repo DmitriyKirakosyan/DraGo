@@ -43,9 +43,9 @@ upgrade() ->
 init([]) ->
     Web = web_specs(batoo_web, 8080),
     DB = {gamedb, {gamedb, start, []}, permanent, 5000, worker, dynamic},
-    GameSessionManager = {game_session_manager, {game_session_manager, start_link, []},
-        permanent, 5000, worker, dynamic},
-    Processes = [Web, DB, GameSessionManager],
+    SessionManager = {session_manager, {session_manager, start_link, []}, permanent, 5000, worker, dynamic},
+    GameRoom = {game_room, {game_room, start_link, []}, permanent, 5000, worker, dynamic},
+    Processes = [Web, DB, SessionManager, GameRoom],
     Strategy = {one_for_one, 10, 10},
     {ok,
      {Strategy, lists:flatten(Processes)}}.

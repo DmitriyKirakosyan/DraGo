@@ -2,26 +2,22 @@
 
 -export([handle/3]).
 
--include("mysteryville.hrl").
+-include("batoo.hrl").
 
-handle(<<"add_experience">>, RequestData, UserState) ->
-    Experience = proplists:get_value(<<"experience">>, RequestData),
-    {ok, _NewUserState} = add_experience(Experience, UserState);
+%% -spec handle(binary(), typle(), UserState) -> {ok, NewUserState, Reply}.
 
-handle(<<"add_mastery">>, RequestData, UserState) ->
-    Mastery = proplists:get_value(<<"mastery">>, RequestData),
-    {ok, _NewUserState} = add_mastery(Mastery, UserState);
+handle(<<"create_request">>, RequestData, UserState) ->
+    FriendUserId = proplists:get_value(<<"friend_user_id">>, RequestData),
+    Reply = game_room:create_request(UserState#user_state.user_id, FriendUserId),
+    {ok, UserState, Reply};
+
+handle(<<"approve_request">>, RequestData, UserState) ->
+    OwnerUserId = proplists:get_value(<<"owner_user_id">>, RequestData),
+    case game_room:approve_request(UserState#user_state.user_id, OwnerUserId) of
+        OkReply = {ok, game_started} ->
+            {ok, UserState#user_state{active=false}, OkReply};
+        _Error ->
+            {ok, UserState, {error, cant_started}}
+    end;
 
 handle(_, _, UserState) -> {ok, UserState}.
-
-add_experience(Experience, UserState) ->
-    case Experience < 0 of
-        true ->
-            {ok, UserState};
-        false ->
-            NewExperience = UserState#user_state.experience + Experience,
-            {ok, UserState#user_state{experience = NewExperience}}
-    end.
-
-add_mastery(Mastery, UserState) ->
-    {ok, UserState#user_state{mastery=UserState#user_state.mastery+Mastery}}.

@@ -3,7 +3,7 @@
 
 %% @doc Game session generic server
 
--module(game_session).
+-module(session).
 
 -behaviour(gen_server).
 
@@ -22,9 +22,9 @@
 
 -define(collection, state).
 
--include("mysteryville.hrl").
+-include("batoo.hrl").
 
--record(state, {alive=true, user_id, user_state=#user_state{}}).
+-record(state, {alive=true, user_state=#user_state{}}).
 
 %%%===================================================================
 %%% API
@@ -38,13 +38,8 @@ start_link(UserId) ->
 %%%===================================================================
 
 init(UserId) ->
-    UserState = case game_db:find(?collection, UserId, {}) of
-        {ok, [UserStateBson]} ->
-            bsonState_to_state(UserStateBson);
-        _Error ->
-            #user_state{last_time=game_util:milliseconds_now()}
-    end,
-    {ok, #state{user_id=UserId, user_state=UserState}, 4000}.
+    UserState = #user_state{user_id= UserId, last_time=utils:milliseconds_now(), active=true},
+    {ok, #state{user_state=UserState}, 4000}.
 
 handle_call(_, _From, State=#state{alive=false}) ->
     {stop, [], {error, started_in_other_window}, State};
@@ -52,14 +47,12 @@ handle_call(_, _From, State=#state{alive=false}) ->
 handle_call({die_after_request, _}, _From, State) ->
     {reply, {ok, i_will_die}, State#state{alive=false}};
 
-handle_call(Request, _From, State) ->
-    RequestName = proplists:get_value(<<"request_name">>, Request),
-    RequestData = proplists:delete(<<"request_name">>, Request),
-    {ok, UserState} = requets_handler:handle(RequestName, RequestData,
-                                                State#state.user_state),
-    NewUserState = state_accounter:recompute(UserState),
-    ParsedUserState = state_to_proplist(NewUserState),
-    {reply, {ok, ParsedUserState}, State#state{user_state=NewUserState}}.
+handle_call({RequestName, RequestData}, _From, State) ->
+    {ok, NewUserState, Reply} = requets_handler:handle(RequestName, RequestData, State#state.user_state),
+    {reply, Reply, State#state{user_state=NewUserState}};
+
+handle_call(_Request, _From, State) ->
+    {reply, {ok, empty_request}, State}.
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
@@ -82,26 +75,8 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
-state_to_proplist(UserState) ->
-    [{level, UserState#user_state.level},
-     {world_name, UserState#user_state.mastery}
-    ].
-
 %session_to_bson(UserState) ->
 %    {energy, UserState#user_state.energy,
 %     cash, UserState#user_state.cash,
 %     experience, UserState#user_state.experience
 %    }.
-
-bsonState_to_state(Bson) ->
-    Level = get_bson_value(level, Bson),
-    Mastery = get_bson_value(mastery, Bson),
-    #user_state{level = Level, mastery = Mastery}.
-
-get_bson_value(Variable, Bson) ->
-    case bson:lockup(Variable, Bson) of
-        {} ->
-            undefined;
-        {Value} ->
-            Value
-    end.

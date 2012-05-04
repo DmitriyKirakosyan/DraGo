@@ -30,10 +30,15 @@ loop(Req, DocRoot) ->
                         Req:serve_file(Path, DocRoot)
                 end;
             'POST' ->
-                case Path of
-                    _ ->
-                        Req:not_found()
-                end;
+                ParsedPost = Req:parse_post(),
+                Request = proplists:get_value("request", ParsedPost),
+                Response = case mochijson2:decode(Request) of
+                   {struct, Props} ->
+                       request_handler(Props);
+                   _ ->
+                       {error, bad_request}
+                end,
+                Req:respond({200, mochiweb_headers:empty(), mochijson2:encode([{response, [Response]}])});
             _ ->
                 Req:respond({501, [], []})
         end
@@ -47,6 +52,16 @@ loop(Req, DocRoot) ->
             %% NOTE: mustache templates need \ because they are not awesome.
             Req:respond({500, [{"Content-Type", "text/plain"}],
                          "request failed, sorry\n"})
+    end.
+
+request_handler(Request) ->
+    io:format("Request : ~p~n", [Request]),
+    case proplists:get_value(<<"request_name">>, Request) of
+        <<"authorize">> ->
+            game_session_manager:run_session();
+        _ ->
+            SessionKey = proplists:get_value(<<"session_key">>, Request, <<>>),
+            game_session_manager:handle_request(SessionKey, proplists:delete(<<"session_key">>, Request))
     end.
 
 %% Internal API

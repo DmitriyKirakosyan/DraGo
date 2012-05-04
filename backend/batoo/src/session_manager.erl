@@ -1,14 +1,12 @@
-%% @author Beenza Games <dev@beenza.ru>
-%% @copyright 2011 Beenza Games <dev@beenza.ru>
-
 %% @doc Game session manager
 
--module(game_session_manager).
+-module(session_manager).
 
 -behaviour(gen_server).
 
-%% API
 -export([start_link/0]).
+
+-export ([has_session_for/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -19,11 +17,8 @@
          code_change/3]).
 
 %% public functions
--export([run_session/1, handle_request/2]).
+-export([run_session/0, handle_request/2]).
 
--define(SERVER, ?MODULE).
-
--record(session, {user_id, pid}).
 -record(state, {sessions=[]}).
 
 %%%===================================================================
@@ -31,7 +26,7 @@
 %%%===================================================================
 
 start_link() ->
-    gen_server:start_link({local, game_session_manager}, ?MODULE, [], []).
+    gen_server:start_link({local, session_manager}, ?MODULE, [], []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -41,31 +36,26 @@ init([]) ->
     erlang:process_flag(trap_exit, true),
     {ok, #state{}}.
 
-handle_call({run_session, UserId}, _From, State) ->
+handle_call(run_session, _From, State) ->
                                                 % remove dead sessions
-    Sessions = [{Key, Session} || {Key, Session} <- State#state.sessions, erlang:is_process_alive(Session#session.pid)],
-    ExistingSessions = [Session || {_Key, Session} <- Sessions, Session#session.user_id == UserId],
-    case length(ExistingSessions) == 0 of
-        true ->
-            ok;
-        false ->
-            lists:foreach(fun(Session) -> gen_server:call(Session#session.pid, {die_after_request, []}) end, Sessions)
-    end,
-    {ok, Pid} = game_session:start_link(UserId),
-    SessionKey = generate_session_key(UserId),
+    Sessions = [{Key, Pid} || {Key, Pid} <- State#state.sessions, erlang:is_process_alive(Pid)],
+    SessionKey = generate_session_key(<<"0">>),
+    {ok, Pid} = session:start_link(SessionKey),
     Reply = {ok, {Pid, SessionKey}},
-    NewState = State#state{sessions=[{SessionKey, 
-                                      #session{user_id=UserId, pid=Pid}} | Sessions]},
+    NewState = State#state{sessions=[{SessionKey, Pid} | Sessions]},
     {reply, Reply, NewState};
 
 handle_call({get_session_pid, SessionKey}, _From, State) ->
-    Sessions = [{Key, Session} || {Key, Session} <- State#state.sessions, erlang:is_process_alive(Session#session.pid)],
+    Sessions = [{Key, Pid} || {Key, Pid} <- State#state.sessions, erlang:is_process_alive(Pid)],
     case proplists:get_value(SessionKey, Sessions, none) of
         none ->
             {reply, {error, no_session}, State};
-        Session when is_record(Session, session) ->
-            {reply, {ok, Session#session.pid}, State}
-    end.
+        Pid ->
+            {reply, {ok, Pid}, State}
+    end;
+
+handle_call(_Request, _From, State) ->
+    {reeply, {ok, empty_request}, State}.
 
 
 handle_cast(_Msg, State) ->
@@ -84,8 +74,21 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Public functions
 %%%===================================================================
 
-run_session(UserId) ->
-    gen_server:call(game_session_manager, {run_session, UserId}).
+run_session() ->
+    case gen_server:call(session_manager, run_session) of
+        {ok, {_Pid, SessionKey}} ->
+            {ok, SessionKey};
+        _Error ->
+            {error, cant_run_session}
+    end.
+
+has_session_for(UserId) ->
+    case get_session_pid(UserId) of
+        {error, no_session} ->
+            false;
+        {ok, _Pid} ->
+            true
+    end.
 
 handle_request(SessionKey, Request) ->
     case get_session_pid(SessionKey) of
@@ -101,11 +104,11 @@ handle_request(SessionKey, Request) ->
 %%%===================================================================
 
 get_session_pid(SessionKey) ->
-    gen_server:call(game_session_manager, {get_session_pid, SessionKey}).
+    gen_server:call(session_manager, {get_session_pid, SessionKey}).
 
 generate_session_key(UserId) ->
-    MillisecondsNow = game_util:milliseconds_now(),
+    MillisecondsNow = utils:milliseconds_now(),
     Random = trunc(random:uniform() * 1000),
     io:format("random number is : ~p~n", [Random]),
     SessionKeyMD5 = erlang:md5(<<UserId/binary, MillisecondsNow/integer, Random/integer>>),
-    list_to_binary(game_util:hexstring(SessionKeyMD5)).
+    list_to_binary(utils:hexstring(SessionKeyMD5)).
