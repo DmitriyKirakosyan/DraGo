@@ -10,7 +10,7 @@ import scene.IScene;
 import scene.SceneEvent;
 
 public class MainMenu extends ViewController implements IScene {
-	private var _dashboard:Dashboard;
+	private var _playersPanel:PlayersPanel;
 	private var _container:Sprite;
 	private var _startButton:StartButtonView;
 
@@ -25,6 +25,7 @@ public class MainMenu extends ViewController implements IScene {
 		view.height = Main.HEIGHT;
 		_container.addChild(view);
 		_container.addChild(_startButton);
+		_container.addChild(_playersPanel);
 		addListeners();
 	}
 
@@ -32,12 +33,13 @@ public class MainMenu extends ViewController implements IScene {
 		removeListeners();
 		_container.removeChild(view);
 		_container.removeChild(_startButton);
+		_container.removeChild(_playersPanel);
 	}
 
-	public function getDashboard():Dashboard { return _dashboard; }
-
 	private function initObjects():void {
-		_dashboard = new Dashboard(thisView.dashboard);
+		thisView.removeChild(thisView.dashboard);
+		_playersPanel = new PlayersPanel();
+		_playersPanel.x = Main.WIDTH - _playersPanel.width;
 		_startButton = new StartButtonView();
 		_startButton.x = 100;
 		_startButton.y = 100;

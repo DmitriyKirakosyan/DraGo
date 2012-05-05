@@ -17,7 +17,7 @@
          code_change/3]).
 
 %% public functions
--export([run_session/0, handle_request/2, get_sessions/0, clean_sessions/0]).
+-export([run_session/0, handle_request/2, get_users/0, get_sessions/0, clean_sessions/0]).
 
 -record(state, {sessions=[]}).
 
@@ -97,6 +97,11 @@ has_session_for(UserId) ->
             true
     end.
 
+get_users() ->
+    gen_server:call(session_manager, clean_sessions),
+    {ok, Sessions} = gen_server:call(session_manager, get_sessions),
+    [SessionKey || {SessionKey, _Pid} <- Sessions].
+
 handle_request(SessionKey, Request) ->
     case get_session_pid(SessionKey) of
         {error, no_session} ->
@@ -105,6 +110,7 @@ handle_request(SessionKey, Request) ->
             RequestName = proplists:get_value(<<"request">>, Request),
             gen_server:call(Pid, {RequestName, proplists:delete(<<"request">>, Request)})
     end.
+
 
 %% debug
 

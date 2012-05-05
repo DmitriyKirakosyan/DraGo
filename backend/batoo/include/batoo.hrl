@@ -1,5 +1,5 @@
 -record(user_state, {
-    active,
+    in_game,
     user_id,
     last_time
 }).

@@ -7,7 +7,13 @@
 %% -spec handle(binary(), typle(), UserState) -> {ok, NewUserState, Reply}.
 
 handle(<<"get_state">>, _RequestData, UserState) ->
-    {ok, UserState, {ok, [{users_online, 0}]}};
+    Reply = case UserState#user_state.in_game of
+        true ->
+            {ok, state};
+        _False ->
+            {ok, [{users, session_manager:get_users()}]}
+    end,
+    {ok, UserState, Reply};
 
 handle(<<"create_request">>, RequestData, UserState) ->
     FriendUserId = proplists:get_value(<<"friend_user_id">>, RequestData),
@@ -18,7 +24,7 @@ handle(<<"approve_request">>, RequestData, UserState) ->
     OwnerUserId = proplists:get_value(<<"owner_user_id">>, RequestData),
     case game_room:approve_request(UserState#user_state.user_id, OwnerUserId) of
         OkReply = {ok, game_started} ->
-            {ok, UserState#user_state{active=false}, OkReply};
+            {ok, UserState#user_state{in_game=true}, OkReply};
         _Error ->
             {ok, UserState, {error, cant_started}}
     end;

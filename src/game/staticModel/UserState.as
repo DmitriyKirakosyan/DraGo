@@ -4,19 +4,23 @@
  * Time: 9:10 PM
  */
 package game.staticModel {
-import controller.GameController;
+
+import flash.events.Event;
+import flash.events.EventDispatcher;
 
 import flash.events.TimerEvent;
 import flash.utils.Timer;
 
 import rpc.GameRpc;
 
-public class UserState {
+public class UserState extends EventDispatcher {
 	private static var _instance:UserState;
 
 	private var _timer:Timer;
 	private var _sessionKey:String;
 	private var _numUsers:int;
+
+	private var _users:Array;
 
 
 	public static function get instance():UserState {
@@ -28,6 +32,7 @@ public class UserState {
 		super();
 	}
 
+	public function get users():Array { return _users; }
 
 	public function init(sessionKey:String):void {
 		_sessionKey = sessionKey;
@@ -43,7 +48,8 @@ public class UserState {
 	}
 
 	private function onGetState(result:Object):void {
-		trace("state got [UserState.onGetState]");
+		_users = result["users"];
+		dispatchEvent(new Event(Event.CHANGE));
 	}
 
 }
