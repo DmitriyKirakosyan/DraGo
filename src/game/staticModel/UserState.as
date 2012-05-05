@@ -33,6 +33,7 @@ public class UserState extends EventDispatcher {
 	}
 
 	public function get users():Array { return _users; }
+	public function get userName():String { return _sessionKey; }
 
 	public function init(sessionKey:String):void {
 		_sessionKey = sessionKey;

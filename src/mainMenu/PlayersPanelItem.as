@@ -5,6 +5,7 @@
  */
 package mainMenu {
 import flash.display.Sprite;
+import flash.events.MouseEvent;
 import flash.text.TextField;
 import flash.text.TextFieldAutoSize;
 
@@ -20,11 +21,34 @@ public class PlayersPanelItem extends Sprite {
 		_playerKey = playerKey;
 		_playerName = playerName;
 		init();
+		addListeners();
+	}
+
+	public function remove():void {
+		removeListeners();
 	}
 
 	public function get playerKey():String { return _playerKey; }
 	public function get playerName():String { return _playerName; }
 
+
+	private function addListeners():void {
+		addEventListener(MouseEvent.MOUSE_OVER, onMouseOver);
+		addEventListener(MouseEvent.MOUSE_OUT, onMouseOut);
+	}
+	private function removeListeners():void {
+		removeEventListener(MouseEvent.MOUSE_OVER, onMouseOver);
+		removeEventListener(MouseEvent.MOUSE_OUT, onMouseOut);
+	}
+
+	private function onMouseOver(event:MouseEvent):void {
+		graphics.beginFill(0xB9D3EE);
+		graphics.drawRect(0, 0, _textField.textWidth + 20, _textField.textHeight + 10);
+	}
+	private function onMouseOut(event:MouseEvent):void {
+		graphics.beginFill(0xBEBEBE);
+		graphics.drawRect(0, 0, _textField.textWidth + 20, _textField.textHeight + 10);
+	}
 
 	private function init():void {
 		_textField = new TextField();

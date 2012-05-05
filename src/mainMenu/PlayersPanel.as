@@ -6,12 +6,18 @@
 package mainMenu {
 import flash.display.Sprite;
 import flash.events.Event;
+import flash.text.TextField;
+import flash.text.TextFieldAutoSize;
 
 import game.staticModel.UserState;
+
+import mx.controls.Text;
 
 public class PlayersPanel extends Sprite {
 	private const WIDTH:int = 200;
 	private const HEIGHT:int = 200;
+
+	private var _emptyLabel:TextField;
 
 	private var _items:Vector.<PlayersPanelItem>;
 
@@ -39,6 +45,7 @@ public class PlayersPanel extends Sprite {
 	private function removeItems():void {
 		if (!_items) { return; }
 		for each (var item:PlayersPanelItem in _items) {
+			item.remove();
 			if (super.contains(item)) { super.removeChild(item); }
 		}
 		_items = new Vector.<PlayersPanelItem>();
@@ -49,13 +56,17 @@ public class PlayersPanel extends Sprite {
 		var playerItem:PlayersPanelItem;
 		var i:int = 0;
 		for each (var userKey:String in UserState.instance.users) {
-			playerItem = new PlayersPanelItem("player " + i, userKey);
-			_items.push(playerItem);
-			playerItem.y = 5 + i * (playerItem.height + 10);
-			playerItem.x = 10;
-			addChild(playerItem);
-			++i;
+			if (userKey != UserState.instance.userName) {
+				playerItem = new PlayersPanelItem("player " + i, userKey);
+				_items.push(playerItem);
+				playerItem.y = 5 + i * (playerItem.height + 10);
+				playerItem.x = 10;
+				addChild(playerItem);
+				++i;
+			}
 		}
+		if (_items.length == 0) { addEmptyLabel();
+		} else { removeEmptyLabel(); }
 	}
 
 	private function playersChanged():Boolean {
@@ -68,6 +79,22 @@ public class PlayersPanel extends Sprite {
 			}
 		}
 		return false;
+	}
+
+	private function createEmptyLabel():void {
+		_emptyLabel = new TextField();
+		_emptyLabel.selectable = false;
+		_emptyLabel.autoSize = TextFieldAutoSize.LEFT;
+		_emptyLabel.text = "No players";
+		_emptyLabel.x = WIDTH/2 - _emptyLabel.textWidth/2;
+		_emptyLabel.y = 20;
+	}
+	private function addEmptyLabel():void {
+		if (!_emptyLabel) { createEmptyLabel(); }
+		addChild(_emptyLabel);
+	}
+	private function removeEmptyLabel():void {
+		if (_emptyLabel && contains(_emptyLabel)) { removeChild(_emptyLabel); }
 	}
 }
 }
