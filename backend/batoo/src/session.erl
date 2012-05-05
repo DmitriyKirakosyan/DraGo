@@ -39,7 +39,7 @@ start_link(UserId) ->
 
 init(UserId) ->
     UserState = #user_state{user_id= UserId, last_time=utils:milliseconds_now(), active=true},
-    {ok, #state{user_state=UserState}}.%, 4000}.
+    {ok, #state{user_state=UserState}, 4000}.
 
 handle_call(_, _From, State=#state{alive=false}) ->
     {stop, [], {error, started_in_other_window}, State};
@@ -49,10 +49,10 @@ handle_call({die_after_request, _}, _From, State) ->
 
 handle_call({RequestName, RequestData}, _From, State) ->
     {ok, NewUserState, Reply} = request_handler:handle(RequestName, RequestData, State#state.user_state),
-    {reply, Reply, State#state{user_state=NewUserState}};
+    {reply, Reply, State#state{user_state=NewUserState}, 4000};
 
 handle_call(_Request, _From, State) ->
-    {reply, {ok, empty_request}, State}.
+    {reply, {ok, empty_request}, State, 4000}.
 
 handle_cast(_Msg, State) ->
     {noreply, State}.

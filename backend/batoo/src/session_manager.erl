@@ -17,7 +17,7 @@
          code_change/3]).
 
 %% public functions
--export([run_session/0, handle_request/2]).
+-export([run_session/0, handle_request/2, get_sessions/0, clean_sessions/0]).
 
 -record(state, {sessions=[]}).
 
@@ -53,6 +53,13 @@ handle_call({get_session_pid, SessionKey}, _From, State) ->
         Pid ->
             {reply, {ok, Pid}, State}
     end;
+
+handle_call(get_sessions, _From, State) ->
+    {reply, {ok, State#state.sessions}, State};
+
+handle_call(clean_sessions, _From, State) ->
+    Sessions = [{Key, Pid} || {Key, Pid} <- State#state.sessions, erlang:is_process_alive(Pid)],
+    {reply, {ok, cleaned}, State#state{sessions=Sessions}};
 
 handle_call(_Request, _From, State) ->
     {reeply, {ok, empty_request}, State}.
@@ -98,6 +105,14 @@ handle_request(SessionKey, Request) ->
             RequestName = proplists:get_value(<<"request">>, Request),
             gen_server:call(Pid, {RequestName, proplists:delete(<<"request">>, Request)})
     end.
+
+%% debug
+
+get_sessions() ->
+    gen_server:call(session_manager, get_sessions).
+
+clean_sessions() ->
+    gen_server:call(session_manager, clean_sessions).
 
 %%%===================================================================
 %%% Internal functions
