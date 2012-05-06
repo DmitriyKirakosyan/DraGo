@@ -56,7 +56,7 @@ public class PlayersPanel extends Sprite {
 		var playerItem:PlayersPanelItem;
 		var i:int = 0;
 		for each (var userKey:String in UserState.instance.users) {
-			if (userKey != UserState.instance.userName) {
+			if (userKey != UserState.instance.userId) {
 				playerItem = new PlayersPanelItem("player " + i, userKey);
 				_items.push(playerItem);
 				playerItem.y = 5 + i * (playerItem.height + 10);

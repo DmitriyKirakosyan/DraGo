@@ -33,7 +33,7 @@ import scene.SceneController;
 			GameRpc.instance.authorize(onAuthorizeComplete);
 			addScenes();
 			registerWindows();
-			new RequestManager();
+			RequestManager.instance.init();
 		}
 
 		private function onAuthorizeComplete(result:Object):void {

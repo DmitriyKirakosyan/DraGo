@@ -4,6 +4,7 @@
  * Time: 5:32 PM
  */
 package game.iface.window {
+import core.event.WindowEvent;
 import core.window.IScreenWindow;
 import core.window.WindowBase;
 
@@ -12,20 +13,39 @@ import flash.events.MouseEvent;
 import flash.text.TextField;
 import flash.text.TextFieldAutoSize;
 
+import game.staticModel.UserState;
+
 import mx.controls.Text;
+
+import rpc.GameRpc;
 
 public class RequestWindow extends WindowBase implements IScreenWindow {
 	private const WIDTH:int = 200;
 	private const HEIGHT:int = 100;
 
 	private var _okBtn:Sprite;
+	private var _waitText:TextField;
 	private var _exitBtn:Sprite;
+
+	private var _owner:String;
 
 	public function RequestWindow() {
 		super();
 		init();
 		x = Main.WIDTH/2 - width/2;
 		y = Main.HEIGHT/2 - height/2;
+	}
+
+	public function setRequestForMeMode(owner:String):void {
+		_okBtn.visible = true;
+		_waitText.visible = false;
+		_owner = owner;
+	}
+
+	public function setRequestByMeMode():void {
+		_okBtn.visible = false;
+		_waitText.visible = true;
+		_owner = UserState.instance.userId;
 	}
 
 	private function init():void {
@@ -35,6 +55,7 @@ public class RequestWindow extends WindowBase implements IScreenWindow {
 		graphics.endFill();
 		createLabel();
 		initBtns();
+		createWaitText();
 	}
 
 	private function createLabel():void {
@@ -69,11 +90,20 @@ public class RequestWindow extends WindowBase implements IScreenWindow {
 		addChild(_exitBtn);
 	}
 
+	private function createWaitText():void {
+		_waitText = createTextField("wait for partner", 0xffffff);
+		_waitText.x = WIDTH/2 - _waitText.textWidth/2;
+		_waitText.y = HEIGHT - 20;
+		addChild(_waitText);
+	}
+
 	private function onOkBtnClick(event:MouseEvent):void {
-		trace("ok clicked");
+		GameRpc.instance.approveRequest(_owner, null);
+		dispatchEvent(new WindowEvent(WindowEvent.JUST_HIDE_REQUEST));
 	}
 	private function onExitBtnClick(event:MouseEvent):void {
-		trace("exit clicked");
+		GameRpc.instance.declineRequest(_owner, null);
+		dispatchEvent(new WindowEvent(WindowEvent.JUST_HIDE_REQUEST));
 	}
 
 	private function createTextField(text:String, color:uint = 0):TextField {

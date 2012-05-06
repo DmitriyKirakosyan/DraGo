@@ -41,6 +41,16 @@ package rpc {
 			_rpc.send("{" + getRequestString("get_state") + "}", callback);
 		}
 
+		public function createRequest(userFor:String, callback:Function):void {
+			_rpc.send(JSON.encode({request: "create_request", friend_user_id: userFor}), callback);
+		}
+		public function approveRequest(owner:String, callback:Function):void {
+			_rpc.send(JSON.encode({request: "approve_request", owner_user_id: owner}), callback);
+		}
+		public function declineRequest(owner:String, callback:Function):void {
+			_rpc.send(JSON.encode({request: "decline_request", owner_user_id: owner}), callback);
+		}
+
 		public function buyTown(id:String, x:int, y:int, callback:Function):void {
 			var objectInfo:String = "\"id\" : " + id + ", \"x\" : " + x + ", \"y\" : " + y;
 			_rpc.send("{" + getRequestString("buy_town") + ", " + objectInfo + "}", callback);

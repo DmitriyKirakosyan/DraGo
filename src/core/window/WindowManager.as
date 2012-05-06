@@ -37,6 +37,12 @@ package core.window
 		public function showWindow(name:String):void{
 			show(getWindow(name));
 		}
+
+		public function hideWindow(name:String):void {
+			if (currentWindow == getWindow(name)) {
+				hideCurrentWindow();
+			}
+		}
 		
 		public function getWindow(name:String):WindowBase {
 			if (!(name in registeredWindows)) {

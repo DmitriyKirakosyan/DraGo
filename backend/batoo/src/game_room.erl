@@ -4,7 +4,7 @@
 
 -export ([start_link/0]).
 
--export ([create_request/2, get_request_list/0, get_request_list_for/1, approve_request/2]).
+-export ([create_request/2, get_request_list/0, get_request_list_for/1, approve_request/2, decline_request/2]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -30,6 +30,9 @@ create_request(OwnerUserId, FriendUserId) ->
 
 approve_request(UserId, OwnerUserId) ->
     gen_server:call(game_room, {approve_request, UserId, OwnerUserId}).
+
+decline_request(OwnerUserId, FriendUserId) ->
+    gen_server:call(game_room, {decline_request, OwnerUserId, FriendUserId}).
 
 get_request_list() ->
     gen_server:call(game_room, get_request_list).
@@ -67,6 +70,16 @@ handle_call({approve_request, UserId, OwnerUserId}, _From, State) ->
         none ->
             {reply, {error, cant_find_request}, State}
     end;
+
+handle_call({decline_request, OwnerUserId, FriendUserId}, _From, State) ->
+    case find_request(OwnerUserId, FriendUserId, State#state.requests) of
+        Request = #game_request{} ->
+            Requests = [RequestItem || RequestItem <- State#state.requests, RequestItem =/= Request],
+            {reply, {ok, declined}, State#state{requests=Requests}};
+        none ->
+            {reply, {error, cant_find_request}, State}
+    end;
+
 
 handle_call(get_request_list, _From, State) ->
     Requests = update_requests(State#state.requests),

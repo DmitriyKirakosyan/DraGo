@@ -11,6 +11,8 @@ import flash.events.EventDispatcher;
 import flash.events.TimerEvent;
 import flash.utils.Timer;
 
+import game.request.RequestVO;
+
 import rpc.GameRpc;
 
 public class UserState extends EventDispatcher {
@@ -21,7 +23,7 @@ public class UserState extends EventDispatcher {
 	private var _numUsers:int;
 
 	private var _users:Array;
-	private var _requests:Array;
+	private var _requests:Vector.<RequestVO>;
 
 
 	public static function get instance():UserState {
@@ -34,7 +36,8 @@ public class UserState extends EventDispatcher {
 	}
 
 	public function get users():Array { return _users; }
-	public function get userName():String { return _sessionKey; }
+	public function get requests():Vector.<RequestVO> { return _requests; }
+	public function get userId():String { return _sessionKey; }
 
 	public function init(sessionKey:String):void {
 		_sessionKey = sessionKey;
@@ -51,8 +54,16 @@ public class UserState extends EventDispatcher {
 
 	private function onGetState(result:Object):void {
 		_users = result["users"];
-		_requests = result["requests"];
+		updateRequests(result["requests"]);
 		dispatchEvent(new Event(Event.CHANGE));
+	}
+
+	private function updateRequests(requestList:Array):void {
+		if (!requestList) { return; }
+		_requests = new Vector.<RequestVO>();
+		for each (var requestObject:Object in requestList) {
+			_requests.push(new RequestVO(requestObject["owner"], requestObject["userFor"], requestObject["new"]));
+		}
 	}
 
 }
