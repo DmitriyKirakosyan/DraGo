@@ -70,7 +70,7 @@ public class PlayersPanel extends Sprite {
 	}
 
 	private function playersChanged():Boolean {
-		if (_items.length != UserState.instance.users.length) {
+		if (_items.length != UserState.instance.users.length-1) {
 			return true;
 		}
 		for (var i:int = 0; i < _items.length; ++i) {

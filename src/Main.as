@@ -1,7 +1,14 @@
 package {
 import controller.GameController;
 
+import core.enum.WindowsENUM;
+
+import core.window.WindowManager;
+
 import flash.display.Sprite;
+
+import game.iface.window.RequestWindow;
+import game.manager.RequestManager;
 
 import game.player.PlayerVO;
 
@@ -25,6 +32,8 @@ import scene.SceneController;
 			GameRpc.instance.init("localhost", 8080);
 			GameRpc.instance.authorize(onAuthorizeComplete);
 			addScenes();
+			registerWindows();
+			new RequestManager();
 		}
 
 		private function onAuthorizeComplete(result:Object):void {
@@ -41,6 +50,11 @@ import scene.SceneController;
 
 			MatchInfo.instance.whitePlayer = new PlayerVO(true);
 			MatchInfo.instance.blackPlayer = new PlayerVO(true);
+		}
+
+		private function registerWindows():void {
+			WindowManager.instance.layer = this;
+			WindowManager.instance.registerWindow(WindowsENUM.REQUEST_WINDOW, new RequestWindow());
 		}
 	}
 }

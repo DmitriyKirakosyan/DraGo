@@ -21,6 +21,7 @@ public class UserState extends EventDispatcher {
 	private var _numUsers:int;
 
 	private var _users:Array;
+	private var _requests:Array;
 
 
 	public static function get instance():UserState {
@@ -50,6 +51,7 @@ public class UserState extends EventDispatcher {
 
 	private function onGetState(result:Object):void {
 		_users = result["users"];
+		_requests = result["requests"];
 		dispatchEvent(new Event(Event.CHANGE));
 	}
 
