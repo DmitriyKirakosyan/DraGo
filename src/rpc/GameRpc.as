@@ -42,7 +42,7 @@ package rpc {
 		}
 
 		public function createRequest(userFor:String, callback:Function, errCallback:Function):void {
-			_rpc.send(JSON.encode({request: "create_request", friend_user_id: userFor}), callback, errCallback);
+			send({request: "create_request", friend_user_id: userFor}, callback, errCallback);
 		}
 		public function approveRequest(owner:String, callback:Function):void {
 			_rpc.send(JSON.encode({request: "approve_request", owner_user_id: owner}), callback);
@@ -57,7 +57,10 @@ package rpc {
 		}
 
 		public function send(request:Object, callback:Function=null, errback:Function=null):void {
-			_rpc.send(JSON.encode(request), callback);
+			if (authKey && authKey != "") {
+				request["session_key"] = authKey;
+			}
+			_rpc.send(JSON.encode(request), callback, errback);
 		}
 
 		/* Internal functions */

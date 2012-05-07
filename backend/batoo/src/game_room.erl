@@ -50,14 +50,9 @@ init([]) ->
     {ok, #state{games=[], requests=[]}}.
 
 handle_call({create_game_request, OwnerUserId, FriendUserId}, _From, State) ->
-    case game_session_manager:has_session_for(FriendUserId) of
-        true ->
-            Request = #game_request{white_user_id=OwnerUserId, black_user_id=FriendUserId, white_ready=true, last_update=utils:milliseconds_now()},
-            Requests = [Request | State#state.requests],
-            {reply, {ok, created}, State#state{requests=Requests}};
-        _False ->
-            {reply, {error, friend_is_offline}, State}
-    end;
+    Request = #game_request{white_user_id=OwnerUserId, black_user_id=FriendUserId, white_ready=true, last_update=utils:milliseconds_now()},
+    Requests = [Request | State#state.requests],
+    {reply, {ok, created}, State#state{requests=Requests}};
 
 handle_call({approve_request, UserId, OwnerUserId}, _From, State) ->
     case find_request(OwnerUserId, UserId, State#state.requests) of

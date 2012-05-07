@@ -17,7 +17,12 @@ handle(<<"get_state">>, _RequestData, UserState) ->
 
 handle(<<"create_request">>, RequestData, UserState) ->
     FriendUserId = proplists:get_value(<<"friend_user_id">>, RequestData),
-    Reply = game_room:create_request(UserState#user_state.user_id, FriendUserId),
+    Reply = case session_manager:has_session_for(FriendUserId) of
+        true ->
+            game_room:create_request(UserState#user_state.user_id, FriendUserId);
+        _False ->
+            {error, friend_is_offline}
+    end,
     {ok, UserState, Reply};
 
 handle(<<"approve_request">>, RequestData, UserState) ->

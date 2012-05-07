@@ -25,7 +25,7 @@ public class RequestManager {
 
 	private var _newRequests:Vector.<RequestVO>;
 
-	private var _sendingRequest:Boolean;
+	private var _inRequest:Boolean;
 
 	public static function get instance():RequestManager {
 		if (!_instance) { _instance = new RequestManager(); }
@@ -34,7 +34,7 @@ public class RequestManager {
 
 	public function RequestManager():void {
 		super();
-		_sendingRequest = false;
+		_inRequest = false;
 	}
 
 	public function init():void {
@@ -42,6 +42,7 @@ public class RequestManager {
 	}
 
 	public function makeRequest(userFor:String):void {
+		if (_inRequest) { return; }
 		var requestWindow:RequestWindow = WindowManager.instance.getWindow(WindowsENUM.REQUEST_WINDOW) as RequestWindow;
 		requestWindow.setRequestByMeMode();
 		WindowManager.instance.showWindow(WindowsENUM.REQUEST_WINDOW);
@@ -59,7 +60,7 @@ public class RequestManager {
 	}
 
 	private function onRequestCreated(result:Object):void {
-		_sendingRequest = true;
+		_inRequest = true;
 	}
 	private function onRequestFailed(result:Object):void {
 		WindowManager.instance.hideWindow(WindowsENUM.REQUEST_WINDOW);
@@ -67,8 +68,8 @@ public class RequestManager {
 
 	private function onUserStateChange(event:Event):void {
 		//hide window if my request failed
-		if (_sendingRequest && !UserState.instance.requestsByMe) {
-			_sendingRequest = false;
+		if (_inRequest && !UserState.instance.requestsByMe) {
+			_inRequest = false;
 			WindowManager.instance.hideWindow(WindowsENUM.REQUEST_WINDOW);
 		}
 
