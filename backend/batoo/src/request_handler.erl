@@ -6,13 +6,16 @@
 
 %% -spec handle(binary(), typle(), UserState) -> {ok, NewUserState, Reply}.
 
+handle(<<"get_state">>, _RequestData, UserState = #user_state{in_game=true}) ->
+    {ok, UserState, {ok, state}};
+
 handle(<<"get_state">>, _RequestData, UserState) ->
-    Reply = case UserState#user_state.in_game of
-        true ->
-            {ok, state};
-        _False ->
-            {ok, [{users, session_manager:get_users()}]}
-    end,
+    UserId = UserState#user_state.user_id,
+    {ok, AllRequests} = game_room:get_request_list_for(UserId),
+    RequestsForMe = [Request || Request <- AllRequests, proplists:get_value(black_user_id, Request) =:= UserId],
+    RequestsByMe = [Request || Request <- AllRequests, proplists:get_value(white_user_id, Request) =:= UserId],
+    RequestsObject = [{for_me, RequestsForMe}, {by_me, RequestsByMe}],
+    Reply = {ok, [{users, session_manager:get_users()}, {requests, RequestsObject}]},
     {ok, UserState, Reply};
 
 handle(<<"create_request">>, RequestData, UserState) ->

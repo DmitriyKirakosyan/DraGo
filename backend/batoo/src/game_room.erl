@@ -82,10 +82,10 @@ handle_call(get_request_list, _From, State) ->
     {reply, {ok, RequestList}, State#state{requests=Requests}};
 
 handle_call({get_request_list, UserId}, _From, State) ->
-    RequestsForUser = [Request || Request <- State#state.requests,
+    Requests = update_requests(State#state.requests),
+    RequestsForUser = [Request || Request <- Requests,
                                     Request#game_request.white_user_id == UserId orelse Request#game_request.black_user_id == UserId],
-    Requests = update_requests(RequestsForUser),
-    RequestList = requests_to_proplists(Requests),
+    RequestList = requests_to_proplists(RequestsForUser),
     {reply, {ok, RequestList}, State#state{requests=Requests}};
 
 
@@ -121,8 +121,12 @@ requests_without_user(UserId, Requests) ->
 update_requests(Requests) ->
     TimeNow = utils:milliseconds_now(),
     %% use lists:map or smthg else for apply TimeDiff
-    NewRequests = [Request#game_request{time_left=Request#game_request.time_left-TimeDiff}
-                    || Request <- Requests, TimeDiff = TimeNow - Request#game_request.last_update],
+    NewRequests = lists:map(
+        fun(Request) ->
+            TimeDiff = TimeNow - Request#game_request.last_update,
+            Request#game_request{time_left=Request#game_request.time_left-TimeDiff}
+        end, Requests
+    ),
     [Request#game_request{last_update=TimeNow} || Request <- NewRequests, Request#game_request.time_left > 0].
 
 requests_to_proplists(Requests) ->

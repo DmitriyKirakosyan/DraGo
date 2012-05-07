@@ -68,7 +68,7 @@ public class RequestManager {
 
 	private function onUserStateChange(event:Event):void {
 		//hide window if my request failed
-		if (_inRequest && !UserState.instance.requestsByMe) {
+		if (_inRequest && (!UserState.instance.requestsByMe || UserState.instance.requestsByMe.length == 0)) {
 			_inRequest = false;
 			WindowManager.instance.hideWindow(WindowsENUM.REQUEST_WINDOW);
 		}
