@@ -23,7 +23,8 @@ public class UserState extends EventDispatcher {
 	private var _numUsers:int;
 
 	private var _users:Array;
-	private var _requests:Vector.<RequestVO>;
+	private var _requestsForMe:Array;
+	private var _requestsByMe:Array;
 
 
 	public static function get instance():UserState {
@@ -36,7 +37,8 @@ public class UserState extends EventDispatcher {
 	}
 
 	public function get users():Array { return _users; }
-	public function get requests():Vector.<RequestVO> { return _requests; }
+	public function get requestsForMe():Array { return _requestsForMe; }
+	public function get requestsByMe():Array { return _requestsByMe}
 	public function get userId():String { return _sessionKey; }
 
 	public function init(sessionKey:String):void {
@@ -58,12 +60,10 @@ public class UserState extends EventDispatcher {
 		dispatchEvent(new Event(Event.CHANGE));
 	}
 
-	private function updateRequests(requestList:Array):void {
-		if (!requestList) { return; }
-		_requests = new Vector.<RequestVO>();
-		for each (var requestObject:Object in requestList) {
-			_requests.push(new RequestVO(requestObject["owner"], requestObject["userFor"], requestObject["new"]));
-		}
+	private function updateRequests(requestsObject:Object):void {
+		if (!requestsObject) { return; }
+		_requestsForMe = requestsObject["for_me"];
+		_requestsByMe = requestsObject["by_me"];
 	}
 
 }

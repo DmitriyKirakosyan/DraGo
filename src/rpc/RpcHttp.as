@@ -25,9 +25,9 @@ public class RpcHttp extends EventDispatcher {
 		//_loader.addEventListener(Event.COMPLETE, onLoadComplete);
 	}
 
-	public function send(jsonRequest:String, callback:Function):void {
+	public function send(jsonRequest:String, callback:Function, errCallback:Function = null):void {
 		const urlLoader:URLLoader = new URLLoader();
-		_requests.push(new RequestVO(urlLoader, callback));
+		_requests.push(new RequestVO(urlLoader, callback, errCallback));
 		const request:URLRequest = new URLRequest("http://" + _host + ":" + _port);
 		const vars:URLVariables = new URLVariables();
 		vars["request"] = jsonRequest;
@@ -39,21 +39,23 @@ public class RpcHttp extends EventDispatcher {
 
 	private function onLoadComplete(event:Event):void {
 		(event.target as URLLoader).removeEventListener(Event.COMPLETE, onLoadComplete);
-		var callback:Function = getAndRemoveCallback(event.target as URLLoader);
+		var request:RequestVO = getAndRemoveRequest(event.target as URLLoader);
 		trace("response : " + event.target.data + " [RpcHttp.onLoadComplete]");
-		if (callback != null) {
-			var response:Object = JSON.decode(event.target.data)["response"];
-			if (response && response["ok"]) {
-				callback(response["ok"]);
-			}
+		var response:Object = JSON.decode(event.target.data)["response"];
+		if (response) {
+			 if (response["ok"] && request.callback) {
+				 request.callback(response["ok"]);
+			 } else if (response["error"] && request.errCallback) {
+				 request.errCallback(response["error"]);
+			 }
 		}
 	}
 
-	private function getAndRemoveCallback(urlLoader:URLLoader):Function {
+	private function getAndRemoveRequest(urlLoader:URLLoader):RequestVO {
 		for each (var request:RequestVO in _requests) {
 			if (request.loader == urlLoader) {
 				removeRequest(request);
-				return request.callback;
+				return request;
 			}
 		}
 		return null;
@@ -78,9 +80,11 @@ import flash.net.URLLoader;
 class RequestVO {
 	public var loader:URLLoader;
 	public var callback:Function;
+	public var errCallback:Function;
 
-	public function RequestVO(loader:URLLoader, callback:Function):void {
+	public function RequestVO(loader:URLLoader, callback:Function, errCallback:Function):void {
 		this.loader = loader;
 		this.callback = callback;
+		this.errCallback = errCallback;
 	}
 }

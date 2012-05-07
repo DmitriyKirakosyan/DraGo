@@ -41,8 +41,8 @@ package rpc {
 			_rpc.send("{" + getRequestString("get_state") + "}", callback);
 		}
 
-		public function createRequest(userFor:String, callback:Function):void {
-			_rpc.send(JSON.encode({request: "create_request", friend_user_id: userFor}), callback);
+		public function createRequest(userFor:String, callback:Function, errCallback:Function):void {
+			_rpc.send(JSON.encode({request: "create_request", friend_user_id: userFor}), callback, errCallback);
 		}
 		public function approveRequest(owner:String, callback:Function):void {
 			_rpc.send(JSON.encode({request: "approve_request", owner_user_id: owner}), callback);

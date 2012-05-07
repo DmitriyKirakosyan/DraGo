@@ -48,6 +48,10 @@ public class RequestWindow extends WindowBase implements IScreenWindow {
 		_owner = UserState.instance.userId;
 	}
 
+	public function isRequestByMeMode():Boolean {
+		return _waitText.visible;
+	}
+
 	private function init():void {
 		graphics.beginFill(0, .6);
 		graphics.lineStyle(2, 0);
