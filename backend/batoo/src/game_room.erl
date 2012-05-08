@@ -69,9 +69,11 @@ handle_call({approve_request, UserId, OwnerUserId}, _From, State) ->
 handle_call({decline_request, OwnerUserId, FriendUserId}, _From, State) ->
     case find_request(OwnerUserId, FriendUserId, State#state.requests) of
         Request = #game_request{} ->
+            io:format("request founded : ~p~n", [Request]),
             Requests = [RequestItem || RequestItem <- State#state.requests, RequestItem =/= Request],
             {reply, {ok, declined}, State#state{requests=Requests}};
         none ->
+            io:format("request not found ~n"),
             {reply, {error, cant_find_request}, State}
     end;
 

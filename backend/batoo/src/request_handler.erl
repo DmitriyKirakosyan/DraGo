@@ -12,8 +12,8 @@ handle(<<"get_state">>, _RequestData, UserState = #user_state{in_game=true}) ->
 handle(<<"get_state">>, _RequestData, UserState) ->
     UserId = UserState#user_state.user_id,
     {ok, AllRequests} = game_room:get_request_list_for(UserId),
-    RequestsForMe = [Request || Request <- AllRequests, proplists:get_value(black_user_id, Request) =:= UserId],
-    RequestsByMe = [Request || Request <- AllRequests, proplists:get_value(white_user_id, Request) =:= UserId],
+    RequestsForMe = [proplists:get_value(white_user_id, Request) || Request <- AllRequests, proplists:get_value(black_user_id, Request) =:= UserId],
+    RequestsByMe = [proplists:get_value(black_user_id, Request) || Request <- AllRequests, proplists:get_value(white_user_id, Request) =:= UserId],
     RequestsObject = [{for_me, RequestsForMe}, {by_me, RequestsByMe}],
     Reply = {ok, [{users, session_manager:get_users()}, {requests, RequestsObject}]},
     {ok, UserState, Reply};
@@ -42,8 +42,8 @@ handle(<<"decline_request">>, RequestData, UserState) ->
     FriendUserId = proplists:get_value(<<"friend_user_id">>, RequestData),
     if
         OwnerUserId =:=  UserState#user_state.user_id orelse FriendUserId =:= UserState#user_state.user_id ->
-            game_room:decline_request(OwnerUserId, FriendUserId),
-            {ok, UserState, {ok, declined}};
+            Reply = game_room:decline_request(OwnerUserId, FriendUserId),
+            {ok, UserState, Reply};
         true ->
             {ok, UserState, {error, denied}}
     end;

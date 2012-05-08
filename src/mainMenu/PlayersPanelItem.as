@@ -64,6 +64,7 @@ public class PlayersPanelItem extends Sprite {
 		_textField = new TextField();
 		_textField.selectable = false;
 		_textField.autoSize = TextFieldAutoSize.LEFT;
+		_textField.mouseEnabled = false;
 		_textField.text = _playerName;
 		_textField.x = 10;
 		_textField.y = 5;

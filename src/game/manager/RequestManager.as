@@ -44,7 +44,7 @@ public class RequestManager {
 	public function makeRequest(userFor:String):void {
 		if (_inRequest) { return; }
 		var requestWindow:RequestWindow = WindowManager.instance.getWindow(WindowsENUM.REQUEST_WINDOW) as RequestWindow;
-		requestWindow.setRequestByMeMode();
+		requestWindow.setRequestByMeMode(userFor);
 		WindowManager.instance.showWindow(WindowsENUM.REQUEST_WINDOW);
 		GameRpc.instance.createRequest(userFor, onRequestCreated, onRequestFailed);
 	}

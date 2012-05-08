@@ -28,6 +28,7 @@ public class RequestWindow extends WindowBase implements IScreenWindow {
 	private var _exitBtn:Sprite;
 
 	private var _owner:String;
+	private var _friend:String;
 
 	public function RequestWindow() {
 		super();
@@ -40,11 +41,13 @@ public class RequestWindow extends WindowBase implements IScreenWindow {
 		_okBtn.visible = true;
 		_waitText.visible = false;
 		_owner = owner;
+		_friend = UserState.instance.userId;
 	}
 
-	public function setRequestByMeMode():void {
+	public function setRequestByMeMode(friend:String):void {
 		_okBtn.visible = false;
 		_waitText.visible = true;
+		_friend = friend;
 		_owner = UserState.instance.userId;
 	}
 
@@ -106,7 +109,7 @@ public class RequestWindow extends WindowBase implements IScreenWindow {
 		dispatchEvent(new WindowEvent(WindowEvent.JUST_HIDE_REQUEST));
 	}
 	private function onExitBtnClick(event:MouseEvent):void {
-		GameRpc.instance.declineRequest(_owner, null);
+		GameRpc.instance.declineRequest(_owner, _friend, null);
 		dispatchEvent(new WindowEvent(WindowEvent.JUST_HIDE_REQUEST));
 	}
 

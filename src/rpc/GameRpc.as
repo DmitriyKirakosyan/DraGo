@@ -2,17 +2,11 @@ package rpc {
 	import by.blooddy.crypto.serialization.JSON;
 	
 	import flash.events.EventDispatcher;
-	import flash.utils.Dictionary;
 
 	public class GameRpc extends EventDispatcher {
 		private static var _instance:GameRpc;
 		
-		private var callbacks:Dictionary = new Dictionary();
-		private var errbacks:Dictionary = new Dictionary();
-		
 		private var _rpc:RpcHttp;
-		//private var connected:Boolean = false;
-		private var userId:String;
 		private var authKey:String;
 		
 		public static function get instance():GameRpc {
@@ -45,15 +39,10 @@ package rpc {
 			send({request: "create_request", friend_user_id: userFor}, callback, errCallback);
 		}
 		public function approveRequest(owner:String, callback:Function):void {
-			_rpc.send(JSON.encode({request: "approve_request", owner_user_id: owner}), callback);
+			send({request: "approve_request", owner_user_id: owner}, callback);
 		}
-		public function declineRequest(owner:String, callback:Function):void {
-			_rpc.send(JSON.encode({request: "decline_request", owner_user_id: owner}), callback);
-		}
-
-		public function buyTown(id:String, x:int, y:int, callback:Function):void {
-			var objectInfo:String = "\"id\" : " + id + ", \"x\" : " + x + ", \"y\" : " + y;
-			_rpc.send("{" + getRequestString("buy_town") + ", " + objectInfo + "}", callback);
+		public function declineRequest(owner:String, friend:String, callback:Function):void {
+			send({request: "decline_request", owner_user_id: owner, friend_user_id: friend}, callback);
 		}
 
 		public function send(request:Object, callback:Function=null, errback:Function=null):void {
