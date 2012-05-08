@@ -21,12 +21,12 @@ ensure_started(App) ->
 start() ->
     batoo_deps:ensure(),
     ensure_started(crypto),
-    application:start(mongodb),
+    %application:start(mongodb),
     application:start(batoo).
 
 
 %% @spec stop() -> ok
 %% @doc Stop the batoo server.
 stop() ->
-    application:stop(monogodb),
+    %application:stop(monogodb),
     application:stop(batoo).

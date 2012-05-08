@@ -42,10 +42,10 @@ upgrade() ->
 %% @doc supervisor callback.
 init([]) ->
     Web = web_specs(batoo_web, 8080),
-    DB = {gamedb, {gamedb, start, []}, permanent, 5000, worker, dynamic},
+    %DB = {gamedb, {gamedb, start, []}, permanent, 5000, worker, dynamic},
     SessionManager = {session_manager, {session_manager, start_link, []}, permanent, 5000, worker, dynamic},
     GameRoom = {game_room, {game_room, start_link, []}, permanent, 5000, worker, dynamic},
-    Processes = [Web, DB, SessionManager, GameRoom],
+    Processes = [Web, SessionManager, GameRoom],
     Strategy = {one_for_one, 10, 10},
     {ok,
      {Strategy, lists:flatten(Processes)}}.

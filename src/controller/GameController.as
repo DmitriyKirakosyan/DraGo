@@ -11,12 +11,9 @@ import flash.events.MouseEvent;
 import game.BoardView;
 import game.GameModel;
 import game.Player;
-import game.Player;
 import game.staticModel.MatchInfo;
 import game.stone.StoneVO;
 import game.events.PlayerEvent;
-
-import org.osmf.layout.PaddingLayoutMetadata;
 
 import scene.IScene;
 import scene.SceneEvent;
