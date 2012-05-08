@@ -4,6 +4,8 @@
 
 -export ([start_link/2]).
 
+-export ([make_move/4]).
+
 %% gen_server callbacks
 -export([init/1,
          handle_call/3,
@@ -21,13 +23,23 @@
 start_link(WhiteUserId, BlackUserId) ->
     gen_server:start_link(?MODULE, [WhiteUserId, BlackUserId], []).
 
+make_move(UserId, X, Y, Hidden) ->
+    gen_server:call({make_move, UserId, X, Y, Hidden}).
+
+
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
 
 init([WhiteUserId, BlackUserId]) ->
-    Game = #game{white_user_id=WhiteUserId, black_user_id=BlackUserId, board_matrix=make_board_matrix(), period=?BASIC_PERIOD},
+    Game = #game{white_user_id=WhiteUserId, black_user_id=BlackUserId,
+                    phase=?BASIC_PERIOD, stones=[], move_player=WhiteUserId},
     {ok, Game}.
+
+handle_call({make_move, UserId, X, Y, Hidden}, _From, State = #game{move_player=UserId}) ->
+    StoneColor = if UserId =:= State#game.white_user_id -> white; true -> black end,
+    NewState = State#game{stones=[#stone{color=StoneColor, x=X, y=Y, hidden=Hidden} | State#game.stones]},
+    {reply, {ok, move_saved}, NewState};
 
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
