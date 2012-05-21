@@ -4,6 +4,7 @@
 
 -export ([start_link/0]).
 
+-export ([get_game_state/1, get_game_list/0, remove_all_games/0]).
 -export ([create_request/2, get_request_list/0, get_request_list_for/1, approve_request/2, decline_request/2]).
 
 %% gen_server callbacks
@@ -25,8 +26,21 @@
 start_link() ->
     gen_server:start_link({local, game_room}, ?MODULE, [], []).
 
+%% game
+
+get_game_state(UserId) ->
+    gen_server:call(game_room, {get_game_state, UserId}).
+
+get_game_list() ->
+    gen_server:call(game_room, get_game_list).
+
+remove_all_games() ->
+    gen_server:call(game_room, remove_all_games).
+
+%% game requests
+
 create_request(OwnerUserId, FriendUserId) ->
-    gen_server:call(game_room, {create_game_request, OwnerUserId, FriendUserId}).
+    gen_server:call(game_room, {create_request, OwnerUserId, FriendUserId}).
 
 approve_request(UserId, OwnerUserId) ->
     gen_server:call(game_room, {approve_request, UserId, OwnerUserId}).
@@ -49,7 +63,26 @@ init([]) ->
     erlang:process_flag(trap_exit, true),
     {ok, #state{games=[], requests=[]}}.
 
-handle_call({create_game_request, OwnerUserId, FriendUserId}, _From, State) ->
+%% game
+
+handle_call({get_game_state, UserId}, _From, State) ->
+    case find_game(UserId, State#state.games) of
+        {{_WhiteUserId, _BlackUserId}, Pid} ->
+            {ok, GameState} = gen_server:call(Pid, get_game_state),
+            {reply, {ok, GameState}, State};
+        _None ->
+            {reply, {error, game_not_found}, State}
+    end;
+
+handle_call(get_game_list, _From, State) ->
+    {reply, {ok, State#state.games}, State};
+handle_call(remove_all_games, _From, State) ->
+    {reply, {ok, removed}, State#state{games = []}};
+
+
+%% game requests
+
+handle_call({create_request, OwnerUserId, FriendUserId}, _From, State) ->
     Request = #game_request{white_user_id=OwnerUserId, black_user_id=FriendUserId, white_ready=true, last_update=utils:milliseconds_now()},
     Requests = [Request | State#state.requests],
     {reply, {ok, created}, State#state{requests=Requests}};
@@ -108,6 +141,13 @@ code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 %% Internal functinos
+
+find_game(_, []) -> none;
+find_game(UserId, [Game = {{WhiteUserId, BlackUserId}, _Pid} | _Games]) when WhiteUserId =:= UserId orelse
+                                        BlackUserId =:= UserId ->
+    Game;
+find_game(UserId, [_Game | Games]) ->
+    find_game(UserId, Games).
 
 find_request(_, _, []) -> none;
 find_request(OwnerUserId, FriendUserId, [Request = #game_request{white_user_id=OwnerUserId, black_user_id=FriendUserId} | _Requests]) ->

@@ -89,7 +89,7 @@ public class RequestManager {
 	private function removeNotActualRequests():void {
 		var notActualRequests:Vector.<RequestVO> = new Vector.<RequestVO>();
 		for each (var requestVO:RequestVO in _newRequests) {
-			if (UserState.instance.requestsForMe.indexOf(requestVO.owner) == -1) {
+			if (!UserState.instance.requestsForMe || UserState.instance.requestsForMe.indexOf(requestVO.owner) == -1) {
 				notActualRequests.push(requestVO);
 			}
 		}

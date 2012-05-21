@@ -11,7 +11,10 @@ import flash.events.MouseEvent;
 import game.BoardView;
 import game.GameModel;
 import game.Player;
+import game.events.MatchManagerEvent;
+import game.manager.MatchManager;
 import game.staticModel.MatchInfo;
+import game.staticModel.UserState;
 import game.stone.StoneVO;
 import game.events.PlayerEvent;
 
@@ -35,6 +38,7 @@ public class GameController extends EventDispatcher implements IScene {
 		_container = container;
 		initObjects();
 		_gameModel = new GameModel();
+		MatchManager.instance.addEventListener(MatchManagerEvent.CHANGE_MOVE_PLAYER, onMovePlayerChange);
 	}
 
 	public function set whitePlayer(value:Player):void {
@@ -52,8 +56,8 @@ public class GameController extends EventDispatcher implements IScene {
 		_container.addChild(_gameContainer);
 		_gameContainer.addChild(_boardView);
 		addListeners();
-		whitePlayer = new Player(MatchInfo.instance.whitePlayer.home);
-		blackPlayer = new Player(MatchInfo.instance.blackPlayer.home);
+		whitePlayer =  new Player(UserState.instance.whiteUserId == UserState.instance.userId);
+		blackPlayer = new Player(UserState.instance.blackUserId == UserState.instance.userId);
 		startGame();
 	}
 	public function close():void {
@@ -66,7 +70,10 @@ public class GameController extends EventDispatcher implements IScene {
 	/* Internal functions */
 
 	private function startGame():void {
-		playerToMove(_blackPlayer);
+	}
+
+	private function onMovePlayerChange(event:MatchManagerEvent):void {
+		playerToMove(UserState.instance.movePlayer == UserState.instance.whiteUserId ? _whitePlayer : _blackPlayer);
 	}
 
 	private function playerToMove(playerToMove:Player):void {

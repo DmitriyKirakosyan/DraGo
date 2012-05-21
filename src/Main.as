@@ -8,6 +8,7 @@ import core.window.WindowManager;
 import flash.display.Sprite;
 
 import game.iface.window.RequestWindow;
+import game.manager.MatchManager;
 import game.manager.RequestManager;
 
 import game.player.PlayerVO;
@@ -34,6 +35,7 @@ import scene.SceneController;
 			addScenes();
 			registerWindows();
 			RequestManager.instance.init();
+			MatchManager.instance.init();
 		}
 
 		private function onAuthorizeComplete(result:Object):void {

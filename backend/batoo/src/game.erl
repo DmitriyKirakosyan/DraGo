@@ -4,8 +4,6 @@
 
 -export ([start_link/2]).
 
--export ([make_move/4]).
-
 %% gen_server callbacks
 -export([init/1,
          handle_call/3,
@@ -23,9 +21,6 @@
 start_link(WhiteUserId, BlackUserId) ->
     gen_server:start_link(?MODULE, [WhiteUserId, BlackUserId], []).
 
-make_move(UserId, X, Y, Hidden) ->
-    gen_server:call({make_move, UserId, X, Y, Hidden}).
-
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -36,10 +31,23 @@ init([WhiteUserId, BlackUserId]) ->
                     phase=?BASIC_PERIOD, stones=[], move_player=WhiteUserId},
     {ok, Game}.
 
+handle_call(get_game_state, _From, State) ->
+    Stones = lists:map(
+        fun(Stone) -> [{color, Stone#stone.color}, {x, Stone#stone.x},
+                        {y, Stone#stone.y}, {hidden, Stone#stone.hidden}, {base, Stone#stone.basic}]
+        end
+    , State#game.stones),
+    Reply = [{white_user_id, State#game.white_user_id}, {black_user_id, State#game.black_user_id},
+                {move_player, State#game.move_player}, {stones, Stones}],
+    {reply, {ok, Reply}, State};
+
 handle_call({make_move, UserId, X, Y, Hidden}, _From, State = #game{move_player=UserId}) ->
     StoneColor = if UserId =:= State#game.white_user_id -> white; true -> black end,
     NewState = State#game{stones=[#stone{color=StoneColor, x=X, y=Y, hidden=Hidden} | State#game.stones]},
     {reply, {ok, move_saved}, NewState};
+
+handle_call({make_move, _UserId, _X, _Y, _Hidden}, _From, State) ->
+    {reply, {error, denied}, State};
 
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.

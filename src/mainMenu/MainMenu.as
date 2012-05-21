@@ -6,6 +6,10 @@ import controller.ViewController;
 import flash.display.Sprite;
 import flash.events.MouseEvent;
 
+import game.events.MatchManagerEvent;
+
+import game.manager.MatchManager;
+
 import scene.IScene;
 import scene.SceneEvent;
 
@@ -18,6 +22,7 @@ public class MainMenu extends ViewController implements IScene {
 		super(new MenuView());
 		_container = container;
 		initObjects();
+		MatchManager.instance.addEventListener(MatchManagerEvent.GAME_STARTED, onGameStarted);
 	}
 
 	public function open():void {
@@ -54,6 +59,10 @@ public class MainMenu extends ViewController implements IScene {
 		_startButton.removeEventListener(MouseEvent.MOUSE_OVER, onStartBtnMouseOver);
 		_startButton.removeEventListener(MouseEvent.MOUSE_OUT, onStartBtnMouseOut);
 		_startButton.removeEventListener(MouseEvent.CLICK, onStartBtnClick);
+	}
+
+	private function onGameStarted(event:MatchManagerEvent):void {
+		dispatchEvent(new SceneEvent((SceneEvent.SWITCH_ME), this));
 	}
 
 	private function onStartBtnMouseOver(event:MouseEvent):void {

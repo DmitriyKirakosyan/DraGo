@@ -22,9 +22,16 @@ public class UserState extends EventDispatcher {
 	private var _sessionKey:String;
 	private var _numUsers:int;
 
+	//game requests
 	private var _users:Array;
 	private var _requestsForMe:Array;
 	private var _requestsByMe:Array;
+
+	//game
+	private var _stones:Array;
+	private var _movePlayer:String;
+	private var _whiteUserId:String;
+	private var _blackUserId:String;
 
 
 	public static function get instance():UserState {
@@ -40,6 +47,10 @@ public class UserState extends EventDispatcher {
 	public function get requestsForMe():Array { return _requestsForMe; }
 	public function get requestsByMe():Array { return _requestsByMe}
 	public function get userId():String { return _sessionKey; }
+	public function get movePlayer():String { return _movePlayer; }
+	public function get whiteUserId():String { return _whiteUserId; }
+	public function get blackUserId():String { return _blackUserId; }
+	public function get stones():Array { return _stones; }
 
 	public function init(sessionKey:String):void {
 		_sessionKey = sessionKey;
@@ -57,11 +68,22 @@ public class UserState extends EventDispatcher {
 	private function onGetState(result:Object):void {
 		_users = result["users"];
 		updateRequests(result["requests"]);
+		_movePlayer = result["move_player"];
+		if (_movePlayer != null) {
+			_stones = result["stones"];
+			_whiteUserId = result["white_user_id"];
+			_blackUserId = result["black_user_id"];
+		}
+
 		dispatchEvent(new Event(Event.CHANGE));
 	}
 
 	private function updateRequests(requestsObject:Object):void {
-		if (!requestsObject) { return; }
+		if (!requestsObject) {
+			_requestsByMe = null;
+			_requestsForMe = null;
+			return;
+		}
 		_requestsForMe = requestsObject["for_me"];
 		_requestsByMe = requestsObject["by_me"];
 	}
