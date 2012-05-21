@@ -15,7 +15,7 @@ public class StoneVO {
 	public static const BLACK:uint = 1;
 
 	public static function createStoneByObject(object:Object):StoneVO {
-		return new StoneVO(object["color"], object["x"], object["y"], object["hidden"], object["basic"]);
+		return new StoneVO(object["color"] == "white" ? WHITE : BLACK, object["x"], object["y"], object["hidden"], object["basic"]);
 	}
 
 	public static function createWhiteStone(x:int, y:int):StoneVO {

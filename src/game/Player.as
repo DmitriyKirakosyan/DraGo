@@ -7,15 +7,22 @@ package game {
 import flash.events.EventDispatcher;
 
 import game.events.BoardViewEvent;
+import game.events.MatchManagerEvent;
 import game.events.PlayerEvent;
+import game.manager.MatchManager;
+import game.stone.StoneVO;
+
+import rpc.GameRpc;
 
 public class Player extends EventDispatcher {
 	private var _home:Boolean;
 	private var _boardView:BoardView;
+	private var _color:uint;
 
-	public function Player(home:Boolean) {
+	public function Player(home:Boolean, stoneColor:uint) {
 		super();
 		_home = home;
+		_color = stoneColor;
 		addListeners();
 	}
 
@@ -39,8 +46,15 @@ public class Player extends EventDispatcher {
 	/* Internal functions */
 
 	private function addListeners():void {
-		if (_home) {
+		if (!_home) {
+			MatchManager.instance.addEventListener(MatchManagerEvent.NEW_STONE, onNewStone);
+		}
+	}
 
+	private function onNewStone(event:MatchManagerEvent):void {
+		var stoneVO:StoneVO = MatchManager.instance.getLastStone();
+		if (stoneVO.color == _color) {
+			dispatchEvent(new PlayerEvent(PlayerEvent.MOVE, stoneVO.x, stoneVO.y));
 		}
 	}
 

@@ -24,6 +24,13 @@ handle(<<"get_state">>, _RequestData, UserState) ->
             {ok, UserState#user_state{in_game = true}, GameState}
     end;
 
+handle(<<"make_move">>, RequestData, UserState) ->
+    UserId = UserState#user_state.user_id,
+    X = proplists:get_value(<<"x">>, RequestData),
+    Y = proplists:get_value(<<"y">>, RequestData),
+    Hidden = proplists:get_value(<<"hidden">>, RequestData),
+    {ok, UserState, game_room:make_move(UserId, X, Y, Hidden)};
+
 
 handle(<<"create_request">>, RequestData, UserState) ->
     FriendUserId = proplists:get_value(<<"friend_user_id">>, RequestData),

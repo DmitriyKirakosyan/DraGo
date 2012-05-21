@@ -42,8 +42,9 @@ handle_call(get_game_state, _From, State) ->
     {reply, {ok, Reply}, State};
 
 handle_call({make_move, UserId, X, Y, Hidden}, _From, State = #game{move_player=UserId}) ->
-    StoneColor = if UserId =:= State#game.white_user_id -> white; true -> black end,
-    NewState = State#game{stones=[#stone{color=StoneColor, x=X, y=Y, hidden=Hidden} | State#game.stones]},
+    {StoneColor, MovePlayer} = if UserId =:= State#game.white_user_id -> {white, State#game.black_user_id};
+                                    true -> {black, State#game.white_user_id} end,
+    NewState = State#game{move_player=MovePlayer, stones=[#stone{color=StoneColor, x=X, y=Y, hidden=Hidden} | State#game.stones]},
     {reply, {ok, move_saved}, NewState};
 
 handle_call({make_move, _UserId, _X, _Y, _Hidden}, _From, State) ->

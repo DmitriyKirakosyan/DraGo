@@ -35,6 +35,10 @@ package rpc {
 			_rpc.send("{" + getRequestString("get_state") + "}", callback);
 		}
 
+		public function makeMove(x:int, y:int, hidden:Boolean, callback:Function, errCallback:Function):void {
+			send({request: "make_move", x: x,  y: y,  hidden: hidden}, callback, errCallback);
+		}
+
 		public function createRequest(userFor:String, callback:Function, errCallback:Function):void {
 			send({request: "create_request", friend_user_id: userFor}, callback, errCallback);
 		}

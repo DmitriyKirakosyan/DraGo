@@ -36,6 +36,13 @@ public class MatchManager extends EventDispatcher{
 		UserState.instance.addEventListener(Event.CHANGE, onStateUpdate);
 	}
 
+	public function getLastStone():StoneVO {
+		if (_stones && _stones.length > 0) {
+			return _stones[_stones.length-1];
+		}
+		return null;
+	}
+
 	private function onStateUpdate(event:Event):void {
 		if (UserState.instance.movePlayer && UserState.instance.stones) {
 			if (!_started) {
@@ -70,7 +77,7 @@ public class MatchManager extends EventDispatcher{
 		var remoteStonesLength:int = UserState.instance.stones.length;
 		for (var i:int = 0; i < remoteStonesLength - _stones.length; ++i) {
 			if (!result) { result = new Vector.<StoneVO>(); }
-			result.push(StoneVO.createStoneByObject(UserState.instance.stones[remoteStonesLength-1-i]));
+			result.push(StoneVO.createStoneByObject(UserState.instance.stones[0])); //only if player can only one move
 		}
 		return result;
 	}
@@ -78,6 +85,7 @@ public class MatchManager extends EventDispatcher{
 	private function addStone(stoneVO:StoneVO):void {
 		_stones.push(stoneVO);
 		dispatchEvent(new MatchManagerEvent(MatchManagerEvent.NEW_STONE));
+		trace("new stone [MatchManager.addStone]");
 	}
 
 }

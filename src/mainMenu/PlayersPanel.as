@@ -39,7 +39,6 @@ public class PlayersPanel extends Sprite {
 	private function onUserStateChange(event:Event):void {
 		if (!_items && !UserState.instance.users) { return; }
 		if (!_items || !UserState.instance.users || playersChanged()) {
-			trace("users changed [PlayersPanel.onUserStateChange]");
 			removeItems();
 			createItems();
 		}

@@ -17,6 +17,9 @@ import game.staticModel.MatchInfo;
 import game.staticModel.UserState;
 import game.stone.StoneVO;
 import game.events.PlayerEvent;
+import game.stone.StoneView;
+
+import rpc.GameRpc;
 
 import scene.IScene;
 import scene.SceneEvent;
@@ -56,8 +59,8 @@ public class GameController extends EventDispatcher implements IScene {
 		_container.addChild(_gameContainer);
 		_gameContainer.addChild(_boardView);
 		addListeners();
-		whitePlayer =  new Player(UserState.instance.whiteUserId == UserState.instance.userId);
-		blackPlayer = new Player(UserState.instance.blackUserId == UserState.instance.userId);
+		whitePlayer =  new Player(UserState.instance.whiteUserId == UserState.instance.userId, StoneVO.WHITE);
+		blackPlayer = new Player(UserState.instance.blackUserId == UserState.instance.userId, StoneVO.BLACK);
 		startGame();
 	}
 	public function close():void {
@@ -77,20 +80,12 @@ public class GameController extends EventDispatcher implements IScene {
 	}
 
 	private function playerToMove(playerToMove:Player):void {
-		_playerToMove = playerToMove;
-		if (playerToMove == _whitePlayer) {
-			removePlayerListeners(_blackPlayer);
-		} else {
-			removePlayerListeners(_whitePlayer);
+		if (_playerToMove) {
+			removePlayerListeners(_playerToMove);
 		}
-		addPlayerListeners(playerToMove);
-	}
-
-	private function switchPlayerMove():void {
-		if (_playerToMove == _whitePlayer) {
-			playerToMove(_blackPlayer);
-		} else {
-			playerToMove(_whitePlayer);
+		_playerToMove = playerToMove;
+		if (_playerToMove) {
+			addPlayerListeners(playerToMove);
 		}
 	}
 
@@ -122,7 +117,11 @@ public class GameController extends EventDispatcher implements IScene {
 				_gameModel.removeStones(deadStones);
 				_boardView.removeStones(deadStones);
 			}
-			switchPlayerMove();
+			if (_playerToMove.home) {
+				GameRpc.instance.makeMove(event.x, event.y, false, null, null);
+			}
+			playerToMove(null);
+			//switchPlayerMove();
 		}
 	}
 
