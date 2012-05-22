@@ -18,10 +18,10 @@
 %
 % stones : [#stone, #stone, ...]
 %
-% period : ?BASIC_PERIOD | ?MAIN_PERIOD | ?END_PERIOD
+% phase : ?BASIC_PHASE | ?MAIN_PHASE | ?END_PHASE
 %
 % move : white | black
 
--define (BASIC_PERIOD, basic_period).
--define (MAIN_PERIOD, main_period).
--define (END_PERIOD, end_period).
+-define (BASIC_PHASE, basic_phase).
+-define (MAIN_PHASE, main_phase).
+-define (END_PHASE, end_phase).

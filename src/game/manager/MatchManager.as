@@ -52,11 +52,11 @@ public class MatchManager extends EventDispatcher{
 				dispatchEvent(new MatchManagerEvent(MatchManagerEvent.GAME_STARTED));
 			}
 
-			updateStones();
 			if (_movePlayer != UserState.instance.movePlayer) {
 				_movePlayer = UserState.instance.movePlayer;
 				dispatchEvent(new MatchManagerEvent(MatchManagerEvent.CHANGE_MOVE_PLAYER));
 			}
+			updateStones();
 
 		} else if (_started) {
 			_started = false;

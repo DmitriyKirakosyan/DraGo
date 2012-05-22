@@ -28,7 +28,7 @@ start_link(WhiteUserId, BlackUserId) ->
 
 init([WhiteUserId, BlackUserId]) ->
     Game = #game{white_user_id=WhiteUserId, black_user_id=BlackUserId,
-                    phase=?BASIC_PERIOD, stones=[], move_player=WhiteUserId},
+                    phase=?BASIC_PHASE, stones=[], move_player=WhiteUserId},
     {ok, Game}.
 
 handle_call(get_game_state, _From, State) ->
@@ -41,7 +41,32 @@ handle_call(get_game_state, _From, State) ->
                 {move_player, State#game.move_player}, {stones, Stones}],
     {reply, {ok, Reply}, State};
 
-handle_call({make_move, UserId, X, Y, Hidden}, _From, State = #game{move_player=UserId}) ->
+%% move %%
+%% basic phase
+
+handle_call({make_move, UserId, X, Y, _Hidden}, _From, State = #game{phase = ?BASIC_PHASE}) ->
+    StoneColor = if UserId =:= State#game.white_user_id -> white; true -> black end,
+    UserStones = get_stones_by_color(StoneColor, State#game.stones),
+    UserStonesLength = lists:flatlength(UserStones),
+    {Reply, State1} = if
+         UserStonesLength < 3 ->
+            {{ok, move_saved}, State#game{stones = [#stone{color=StoneColor, x=X, y=Y, hidden=false} | State#game.stones]}};
+        true ->
+            {{error, too_many_stones}, State}
+    end,
+    %% if 3 black and 3 white stones, then change phase to "main"
+    WhiteStonesLength = lists:flatlength(get_stones_by_color(white, State#game.stones)),
+    BlackStonesLength = lists:flatlength(get_stones_by_color(black, State#game.stones)),
+    NewState = if
+        WhiteStonesLength =:= 3 andalso BlackStonesLength =:= 3 ->
+            State1#game{phase = ?MAIN_PHASE};
+        true -> State1
+    end,
+    {reply, Reply, NewState};
+
+%% main phase
+
+handle_call({make_move, UserId, X, Y, Hidden}, _From, State = #game{move_player=UserId, phase = ?MAIN_PHASE}) ->
     {StoneColor, MovePlayer} = if UserId =:= State#game.white_user_id -> {white, State#game.black_user_id};
                                     true -> {black, State#game.white_user_id} end,
     NewState = State#game{move_player=MovePlayer, stones=[#stone{color=StoneColor, x=X, y=Y, hidden=Hidden} | State#game.stones]},
@@ -68,6 +93,11 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+get_stones_by_color(Color, Stones) ->
+    lists:filter(
+        fun(Stone) -> Stone#stone.color =:= Color end
+    , Stones).
 
 make_board_matrix() ->
     [ { X, [ {Y, 0} || Y <- [0,1,2,3,4,5,6,7,8,9,10]] } || X <- [0,1,2,3,4,5,6,7,8,9,10]].
