@@ -31,15 +31,21 @@ init([WhiteUserId, BlackUserId]) ->
                     phase=?BASIC_PHASE, stones=[], move_player=WhiteUserId},
     {ok, Game}.
 
+%% state %%
+
 handle_call({get_game_state, UserId}, _From, State) ->
-    Stones = lists:map(
+    {MovePlayer, Stones} = if
+        State#game.phase =:= ?BASIC_PHASE ->
+            StoneColor = if UserId =:= State#game.white_user_id -> white; true -> black end,
+            {UserId, get_stones_by_color(StoneColor, State#game.stones)};
+        true -> {State#game.move_player, State#game.stones} end,
+    EncodedStones = lists:map(
         fun(Stone) -> [{color, Stone#stone.color}, {x, Stone#stone.x},
-                        {y, Stone#stone.y}, {hidden, Stone#stone.hidden}, {base, Stone#stone.basic}]
+                        {y, Stone#stone.y}, {hidden, Stone#stone.hidden}, {basic, Stone#stone.basic}]
         end
-    , State#game.stones),
-    MovePlayer = if State#game.phase =:= ?BASIC_PHASE -> UserId; true -> State#game.move_player end,
+    , Stones),
     Reply = [{phase, State#game.phase}, {white_user_id, State#game.white_user_id}, {black_user_id, State#game.black_user_id},
-                {move_player, MovePlayer}, {stones, Stones}],
+                {move_player, MovePlayer}, {stones, EncodedStones}],
     {reply, {ok, [{game, Reply}]}, State};
 
 %% move %%
@@ -51,13 +57,14 @@ handle_call({make_move, UserId, X, Y, _Hidden}, _From, State = #game{phase = ?BA
     UserStonesLength = lists:flatlength(UserStones),
     {Reply, State1} = if
          UserStonesLength < 3 ->
-            {{ok, move_saved}, State#game{stones = [#stone{color=StoneColor, x=X, y=Y, hidden=false} | State#game.stones]}};
+            {{ok, move_saved}, State#game{stones = [#stone{color=StoneColor, x=X, y=Y, hidden=false, basic=true} | State#game.stones]}};
         true ->
             {{error, too_many_stones}, State}
     end,
     %% if 3 black and 3 white stones, then change phase to "main"
-    WhiteStonesLength = lists:flatlength(get_stones_by_color(white, State#game.stones)),
-    BlackStonesLength = lists:flatlength(get_stones_by_color(black, State#game.stones)),
+    WhiteStonesLength = lists:flatlength(get_stones_by_color(white, State1#game.stones)),
+    BlackStonesLength = lists:flatlength(get_stones_by_color(black, State1#game.stones)),
+    io:format("white stones length : ~p, black stones length : ~p~n", [WhiteStonesLength, BlackStonesLength]),
     NewState = if
         WhiteStonesLength =:= 3 andalso BlackStonesLength =:= 3 ->
             State1#game{phase = ?MAIN_PHASE};
