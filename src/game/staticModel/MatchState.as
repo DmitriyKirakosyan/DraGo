@@ -7,7 +7,7 @@ package game.staticModel {
 import flash.events.Event;
 import flash.events.EventDispatcher;
 
-import game.events.MatchManagerEvent;
+import game.events.MatchStateEvent;
 import game.player.PlayerVO;
 
 import game.staticModel.UserState;
@@ -21,6 +21,13 @@ public class MatchState extends EventDispatcher{
 	private var _movePlayer:String;
 	private var _whitePlayer:PlayerVO;
 	private var _blackPlayer:PlayerVO;
+	private var _phase:String;
+
+	public static const BASIC_PHASE:String = "basic_phase";
+	public static const MAIN_PHASE:String = "main_phase";
+	public static const END_PHASE:String = "end_phase";
+
+	public static const NUM_BASIC_STONES:int = 3;
 
 	public static function get instance():MatchState {
 		if (!_instance) { _instance = new MatchState(); }
@@ -45,6 +52,7 @@ public class MatchState extends EventDispatcher{
 	}
 
 	public function get movePlayer():String { return _movePlayer; }
+	public function get phase():String { return _phase; }
 
 	public function get whitePlayer():PlayerVO {
 		return _whitePlayer;
@@ -58,20 +66,41 @@ public class MatchState extends EventDispatcher{
 			var game:Object = UserState.instance.game;
 			if (!_started) {
 				_started = true;
-				_whitePlayer = new PlayerVO(game["white_user_id"], StoneVO.WHITE);
-				_blackPlayer = new PlayerVO(game["black_user_id"], StoneVO.BLACK);
-				dispatchEvent(new MatchManagerEvent(MatchManagerEvent.GAME_STARTED));
+				startMatch(game);
 			}
 
-			if (_movePlayer != game["move_player"]) {
-				_movePlayer = game["move_player"];
-				dispatchEvent(new MatchManagerEvent(MatchManagerEvent.CHANGE_MOVE_PLAYER));
-			}
+			updateMovePlayer(game["move_player"]);
+			updatePhase(game["phase"]);
 			updateStones(game["stones"]);
 
 		} else if (_started) {
 			_started = false;
-			dispatchEvent(new MatchManagerEvent(MatchManagerEvent.GAME_STOPPED));
+			finishMatch();
+		}
+	}
+
+	private function startMatch(game:Object):void {
+		_whitePlayer = new PlayerVO(game["white_user_id"], StoneVO.WHITE);
+		_blackPlayer = new PlayerVO(game["black_user_id"], StoneVO.BLACK);
+		dispatchEvent(new MatchStateEvent(MatchStateEvent.GAME_STARTED));
+	}
+	private function finishMatch():void {
+		dispatchEvent(new MatchStateEvent(MatchStateEvent.GAME_STOPPED));
+	}
+
+	private function updateMovePlayer(movePlayer:String):void {
+		if (_movePlayer != movePlayer) {
+			_movePlayer = movePlayer;
+			dispatchEvent(new MatchStateEvent(MatchStateEvent.CHANGE_MOVE_PLAYER));
+		}
+	}
+
+	private function updatePhase(phase:String):void {
+		if (!_phase || _phase != phase) {
+			if (phase) {
+				_phase = phase;
+				dispatchEvent(new MatchStateEvent(MatchStateEvent.PHASE_CHANGED));
+			}
 		}
 	}
 
@@ -94,7 +123,7 @@ public class MatchState extends EventDispatcher{
 
 	private function addStone(stoneVO:StoneVO):void {
 		_stones.push(stoneVO);
-		dispatchEvent(new MatchManagerEvent(MatchManagerEvent.NEW_STONE));
+		dispatchEvent(new MatchStateEvent(MatchStateEvent.NEW_STONE));
 		trace("new stone [MatchManager.addStone]");
 	}
 

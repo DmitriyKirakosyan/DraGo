@@ -6,13 +6,14 @@
 package game.events {
 import flash.events.Event;
 
-public class MatchManagerEvent extends Event{
+public class MatchStateEvent extends Event{
 	public static const NEW_STONE:String = "newStone";
 	public static const CHANGE_MOVE_PLAYER:String = "changeMovePlayer";
 	public static const GAME_STARTED:String = "gameStarted";
 	public static const GAME_STOPPED:String = "gameStopped";
+	public static const PHASE_CHANGED:String = "phaseChanged";
 
-	public function MatchManagerEvent(type:String):void {
+	public function MatchStateEvent(type:String):void {
 		super(type);
 	}
 }

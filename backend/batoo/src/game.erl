@@ -31,14 +31,15 @@ init([WhiteUserId, BlackUserId]) ->
                     phase=?BASIC_PHASE, stones=[], move_player=WhiteUserId},
     {ok, Game}.
 
-handle_call(get_game_state, _From, State) ->
+handle_call({get_game_state, UserId}, _From, State) ->
     Stones = lists:map(
         fun(Stone) -> [{color, Stone#stone.color}, {x, Stone#stone.x},
                         {y, Stone#stone.y}, {hidden, Stone#stone.hidden}, {base, Stone#stone.basic}]
         end
     , State#game.stones),
-    Reply = [{white_user_id, State#game.white_user_id}, {black_user_id, State#game.black_user_id},
-                {move_player, State#game.move_player}, {stones, Stones}],
+    MovePlayer = if State#game.phase =:= ?BASIC_PHASE -> UserId; true -> State#game.move_player end,
+    Reply = [{phase, State#game.phase}, {white_user_id, State#game.white_user_id}, {black_user_id, State#game.black_user_id},
+                {move_player, MovePlayer}, {stones, Stones}],
     {reply, {ok, [{game, Reply}]}, State};
 
 %% move %%

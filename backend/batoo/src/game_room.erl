@@ -71,7 +71,7 @@ init([]) ->
 handle_call({get_game_state, UserId}, _From, State) ->
     case find_game(UserId, State#state.games) of
         {{_WhiteUserId, _BlackUserId}, Pid} ->
-            {ok, GameState} = gen_server:call(Pid, get_game_state),
+            {ok, GameState} = gen_server:call(Pid, {get_game_state, UserId}),
             {reply, {ok, GameState}, State};
         _None ->
             {reply, {error, game_not_found}, State}

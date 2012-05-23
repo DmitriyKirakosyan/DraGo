@@ -11,7 +11,7 @@ import flash.events.MouseEvent;
 import game.BoardView;
 import game.GameModel;
 import game.Player;
-import game.events.MatchManagerEvent;
+import game.events.MatchStateEvent;
 import game.staticModel.MatchState;
 import game.stone.StoneVO;
 import game.events.PlayerEvent;
@@ -38,7 +38,8 @@ public class GameController extends EventDispatcher implements IScene {
 		_container = container;
 		initObjects();
 		_gameModel = new GameModel();
-		MatchState.instance.addEventListener(MatchManagerEvent.CHANGE_MOVE_PLAYER, onMovePlayerChange);
+		MatchState.instance.addEventListener(MatchStateEvent.CHANGE_MOVE_PLAYER, onMovePlayerChange);
+		MatchState.instance.addEventListener(MatchStateEvent.PHASE_CHANGED, onMatchPhaseChanged);
 	}
 
 	public function set whitePlayer(value:Player):void {
@@ -72,8 +73,11 @@ public class GameController extends EventDispatcher implements IScene {
 	private function startGame():void {
 	}
 
-	private function onMovePlayerChange(event:MatchManagerEvent):void {
+	private function onMovePlayerChange(event:MatchStateEvent):void {
 		playerToMove(MatchState.instance.movePlayer == MatchState.instance.whitePlayer.userId ? _whitePlayer : _blackPlayer);
+	}
+
+	private function onMatchPhaseChanged(event:MatchState):void {
 	}
 
 	private function playerToMove(playerToMove:Player):void {
@@ -104,9 +108,11 @@ public class GameController extends EventDispatcher implements IScene {
 	}
 
 	private function onPlayerMove(event:PlayerEvent):void {
+
 		if (_gameModel.canMove(event.x, event.y)) {
 			var color:uint = _playerToMove == _whitePlayer ? StoneVO.WHITE : StoneVO.BLACK;
-			var stoneVO:StoneVO = new StoneVO(color, event.x, event.y);
+			var basic:Boolean = MatchState.instance.phase == MatchState.BASIC_PHASE;
+			var stoneVO:StoneVO = new StoneVO(color, event.x, event.y, false, basic);
 			_gameModel.addStone(stoneVO);
 			_boardView.addStone(stoneVO);
 			var deadStones:Vector.<StoneVO> = _gameModel.getDeadStones();
@@ -117,7 +123,18 @@ public class GameController extends EventDispatcher implements IScene {
 			if (_playerToMove.home) {
 				GameRpc.instance.makeMove(event.x, event.y, false, null, null);
 			}
-			playerToMove(null);
+			if (MatchState.instance.phase == MatchState.BASIC_PHASE) {
+				if (_gameModel.getNumStones() < MatchState.NUM_BASIC_STONES) {
+
+				}
+			}
+			if (MatchState.instance.phase == MatchState.BASIC_PHASE) {
+				if (_gameModel.getNumStones() == MatchState.NUM_BASIC_STONES) {
+						playerToMove(null);
+				}
+			} else {
+				playerToMove(null);
+			}
 			//switchPlayerMove();
 		}
 	}

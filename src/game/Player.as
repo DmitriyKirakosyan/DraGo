@@ -7,7 +7,7 @@ package game {
 import flash.events.EventDispatcher;
 
 import game.events.BoardViewEvent;
-import game.events.MatchManagerEvent;
+import game.events.MatchStateEvent;
 import game.events.PlayerEvent;
 import game.staticModel.MatchState;
 import game.player.PlayerVO;
@@ -50,11 +50,11 @@ public class Player extends EventDispatcher {
 
 	private function addListeners():void {
 		if (!_home) {
-			MatchState.instance.addEventListener(MatchManagerEvent.NEW_STONE, onNewStone);
+			MatchState.instance.addEventListener(MatchStateEvent.NEW_STONE, onNewStone);
 		}
 	}
 
-	private function onNewStone(event:MatchManagerEvent):void {
+	private function onNewStone(event:MatchStateEvent):void {
 		var stoneVO:StoneVO = MatchState.instance.getLastStone();
 		if (stoneVO.color == _vo.color) {
 			dispatchEvent(new PlayerEvent(PlayerEvent.MOVE, stoneVO.x, stoneVO.y));

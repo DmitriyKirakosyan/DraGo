@@ -36,6 +36,8 @@ public class StoneVO {
 	public function get color():uint { return _color; }
 	public function isWhite():Boolean { return _color == WHITE; }
 	public function isBlack():Boolean { return _color == BLACK; }
+	public function get basic():Boolean { return _basic; }
+	public function get hidden():Boolean { return _hidden }
 
 	public function get x():int { return _x; }
 	public function get y():int { return _y; }

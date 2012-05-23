@@ -23,6 +23,16 @@ public class GameModel {
 		return _matrix[x][y] == null;
 	}
 
+	public function getNumStones():int {
+		var result:int = 0;
+		for (var i:int = 0; i < GameController.ROWS_NUM; ++i) {
+			for (var j:int = 0; j < GameController.ROWS_NUM; ++j) {
+				if (_matrix[i][j]) { result++; }
+			}
+		}
+		return result;
+	}
+
 	public function addStone(stoneVO:StoneVO):void {
 		if (!stoneVO) { return; }
 		_lastStoneVO = stoneVO;
