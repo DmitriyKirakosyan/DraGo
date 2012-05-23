@@ -9,20 +9,22 @@ import flash.events.EventDispatcher;
 import game.events.BoardViewEvent;
 import game.events.MatchManagerEvent;
 import game.events.PlayerEvent;
-import game.manager.MatchManager;
+import game.staticModel.MatchState;
+import game.player.PlayerVO;
+import game.staticModel.UserState;
 import game.stone.StoneVO;
 
 import rpc.GameRpc;
 
 public class Player extends EventDispatcher {
-	private var _home:Boolean;
 	private var _boardView:BoardView;
-	private var _color:uint;
+	private var _vo:PlayerVO;
+	private var _home:Boolean;
 
-	public function Player(home:Boolean, stoneColor:uint) {
+	public function Player(vo:PlayerVO) {
 		super();
-		_home = home;
-		_color = stoneColor;
+		_vo = vo;
+		_home = vo.userId == UserState.instance.userId;
 		addListeners();
 	}
 
@@ -32,6 +34,7 @@ public class Player extends EventDispatcher {
 		}
 	}
 
+	public function get vo():PlayerVO { return _vo; }
 	public function get home():Boolean { return _home; }
 
 	public function setBoardView(boardView:BoardView):void {
@@ -47,13 +50,13 @@ public class Player extends EventDispatcher {
 
 	private function addListeners():void {
 		if (!_home) {
-			MatchManager.instance.addEventListener(MatchManagerEvent.NEW_STONE, onNewStone);
+			MatchState.instance.addEventListener(MatchManagerEvent.NEW_STONE, onNewStone);
 		}
 	}
 
 	private function onNewStone(event:MatchManagerEvent):void {
-		var stoneVO:StoneVO = MatchManager.instance.getLastStone();
-		if (stoneVO.color == _color) {
+		var stoneVO:StoneVO = MatchState.instance.getLastStone();
+		if (stoneVO.color == _vo.color) {
 			dispatchEvent(new PlayerEvent(PlayerEvent.MOVE, stoneVO.x, stoneVO.y));
 		}
 	}

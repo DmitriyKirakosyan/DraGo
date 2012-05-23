@@ -12,12 +12,9 @@ import game.BoardView;
 import game.GameModel;
 import game.Player;
 import game.events.MatchManagerEvent;
-import game.manager.MatchManager;
-import game.staticModel.MatchInfo;
-import game.staticModel.UserState;
+import game.staticModel.MatchState;
 import game.stone.StoneVO;
 import game.events.PlayerEvent;
-import game.stone.StoneView;
 
 import rpc.GameRpc;
 
@@ -41,7 +38,7 @@ public class GameController extends EventDispatcher implements IScene {
 		_container = container;
 		initObjects();
 		_gameModel = new GameModel();
-		MatchManager.instance.addEventListener(MatchManagerEvent.CHANGE_MOVE_PLAYER, onMovePlayerChange);
+		MatchState.instance.addEventListener(MatchManagerEvent.CHANGE_MOVE_PLAYER, onMovePlayerChange);
 	}
 
 	public function set whitePlayer(value:Player):void {
@@ -59,8 +56,8 @@ public class GameController extends EventDispatcher implements IScene {
 		_container.addChild(_gameContainer);
 		_gameContainer.addChild(_boardView);
 		addListeners();
-		whitePlayer =  new Player(UserState.instance.whiteUserId == UserState.instance.userId, StoneVO.WHITE);
-		blackPlayer = new Player(UserState.instance.blackUserId == UserState.instance.userId, StoneVO.BLACK);
+		whitePlayer =  new Player(MatchState.instance.whitePlayer);
+		blackPlayer = new Player(MatchState.instance.blackPlayer);
 		startGame();
 	}
 	public function close():void {
@@ -76,7 +73,7 @@ public class GameController extends EventDispatcher implements IScene {
 	}
 
 	private function onMovePlayerChange(event:MatchManagerEvent):void {
-		playerToMove(UserState.instance.movePlayer == UserState.instance.whiteUserId ? _whitePlayer : _blackPlayer);
+		playerToMove(MatchState.instance.movePlayer == MatchState.instance.whitePlayer.userId ? _whitePlayer : _blackPlayer);
 	}
 
 	private function playerToMove(playerToMove:Player):void {

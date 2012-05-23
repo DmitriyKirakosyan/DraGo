@@ -5,11 +5,13 @@
  */
 package game.player {
 public class PlayerVO {
-	public var home:Boolean;
+	public var userId:String;
+	public var color:uint;
 
-	public function PlayerVO(home:Boolean):void {
+	public function PlayerVO(userId:String, color:uint):void {
 		super();
-		this.home = home;
+		this.userId = userId;
+		this.color = color;
 	}
 }
 }

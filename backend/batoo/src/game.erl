@@ -39,7 +39,7 @@ handle_call(get_game_state, _From, State) ->
     , State#game.stones),
     Reply = [{white_user_id, State#game.white_user_id}, {black_user_id, State#game.black_user_id},
                 {move_player, State#game.move_player}, {stones, Stones}],
-    {reply, {ok, Reply}, State};
+    {reply, {ok, [{game, Reply}]}, State};
 
 %% move %%
 %% basic phase

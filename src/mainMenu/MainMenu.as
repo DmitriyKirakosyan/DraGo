@@ -8,7 +8,7 @@ import flash.events.MouseEvent;
 
 import game.events.MatchManagerEvent;
 
-import game.manager.MatchManager;
+import game.staticModel.MatchState;
 
 import scene.IScene;
 import scene.SceneEvent;
@@ -22,7 +22,7 @@ public class MainMenu extends ViewController implements IScene {
 		super(new MenuView());
 		_container = container;
 		initObjects();
-		MatchManager.instance.addEventListener(MatchManagerEvent.GAME_STARTED, onGameStarted);
+		MatchState.instance.addEventListener(MatchManagerEvent.GAME_STARTED, onGameStarted);
 	}
 
 	public function open():void {

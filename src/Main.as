@@ -8,12 +8,9 @@ import core.window.WindowManager;
 import flash.display.Sprite;
 
 import game.iface.window.RequestWindow;
-import game.manager.MatchManager;
+import game.staticModel.MatchState;
 import game.manager.RequestManager;
 
-import game.player.PlayerVO;
-
-import game.staticModel.MatchInfo;
 import game.staticModel.UserState;
 
 import mainMenu.MainMenu;
@@ -35,7 +32,7 @@ import scene.SceneController;
 			addScenes();
 			registerWindows();
 			RequestManager.instance.init();
-			MatchManager.instance.init();
+			MatchState.instance.init();
 		}
 
 		private function onAuthorizeComplete(result:Object):void {
@@ -49,9 +46,6 @@ import scene.SceneController;
 			_sceneController.addScene(menuScene, true);
 			_sceneController.addScene(gameScene);
 			_sceneController.addSceneDependence(menuScene, gameScene, true);
-
-			MatchInfo.instance.whitePlayer = new PlayerVO(true);
-			MatchInfo.instance.blackPlayer = new PlayerVO(true);
 		}
 
 		private function registerWindows():void {
