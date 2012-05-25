@@ -45,12 +45,18 @@ public class GameController extends EventDispatcher implements IScene {
 	public function set whitePlayer(value:Player):void {
 		if (_whitePlayer) { trace("WARN! player already exists ! [GameController.whitePlayer]"); }
 		_whitePlayer = value;
-		if (_whitePlayer.home) { _whitePlayer.setBoardView(_boardView); }
+		if (_whitePlayer.home) { _whitePlayer.setBoardView(_boardView);
+		} else {
+			addPlayerListeners(_whitePlayer);
+		}
 	}
 	public function set blackPlayer(value:Player):void {
 		if (_blackPlayer) { trace("WARN! player already exists ! [GameController.blackPlayer]"); }
 		_blackPlayer = value;
-		if (_blackPlayer.home) { _blackPlayer.setBoardView(_boardView); }
+		if (_blackPlayer.home) { _blackPlayer.setBoardView(_boardView);
+		} else {
+			addPlayerListeners(_blackPlayer);
+		}
 	}
 
 	public function open():void {
@@ -77,15 +83,22 @@ public class GameController extends EventDispatcher implements IScene {
 		playerToMove(MatchState.instance.movePlayer == MatchState.instance.whitePlayer.userId ? _whitePlayer : _blackPlayer);
 	}
 
-	private function onMatchPhaseChanged(event:MatchState):void {
+	private function onMatchPhaseChanged(event:MatchStateEvent):void {
+		if (MatchState.instance.phase == MatchState.MAIN_PHASE) {
+			for each (var stoneVO:StoneVO in MatchState.instance.stones) {
+				makeMove(stoneVO);
+			}
+			playerToMove(MatchState.instance.movePlayer == MatchState.instance.whitePlayer.userId ? _whitePlayer : _blackPlayer);
+		}
 	}
 
 	private function playerToMove(playerToMove:Player):void {
-		if (_playerToMove) {
+		trace("change player to move : " + playerToMove + " [GameController.playerToMove]");
+		if (_playerToMove && _playerToMove.home) {
 			removePlayerListeners(_playerToMove);
 		}
 		_playerToMove = playerToMove;
-		if (_playerToMove) {
+		if (_playerToMove && _playerToMove.home) {
 			addPlayerListeners(playerToMove);
 		}
 	}
@@ -108,32 +121,30 @@ public class GameController extends EventDispatcher implements IScene {
 	}
 
 	private function onPlayerMove(event:PlayerEvent):void {
+		var color:uint = (event.target as Player).vo.color;
+		var basic:Boolean = MatchState.instance.phase == MatchState.BASIC_PHASE;
+		var stoneVO:StoneVO = new StoneVO(color, event.x, event.y, false, basic);
+		makeMove(stoneVO);
+		if ((event.target as Player).home) {
+			GameRpc.instance.makeMove(stoneVO.x, stoneVO.y, false, null, null);
+		}
+		if (MatchState.instance.phase == MatchState.BASIC_PHASE) {
+			if (_gameModel.getNumStones() == MatchState.NUM_BASIC_STONES) {
+					playerToMove(null);
+			}
+		} else if ((event.target as Player).home) {
+			playerToMove(null);
+		}
+	}
 
-		if (_gameModel.canMove(event.x, event.y)) {
-			var color:uint = _playerToMove == _whitePlayer ? StoneVO.WHITE : StoneVO.BLACK;
-			var basic:Boolean = MatchState.instance.phase == MatchState.BASIC_PHASE;
-			var stoneVO:StoneVO = new StoneVO(color, event.x, event.y, false, basic);
+	private function makeMove(stoneVO:StoneVO):void {
+		if (_gameModel.canMove(stoneVO.x, stoneVO.y)) {
 			_gameModel.addStone(stoneVO);
 			_boardView.addStone(stoneVO);
 			var deadStones:Vector.<StoneVO> = _gameModel.getDeadStones();
 			if (deadStones.length > 0) {
 				_gameModel.removeStones(deadStones);
 				_boardView.removeStones(deadStones);
-			}
-			if (_playerToMove.home) {
-				GameRpc.instance.makeMove(event.x, event.y, false, null, null);
-			}
-			if (MatchState.instance.phase == MatchState.BASIC_PHASE) {
-				if (_gameModel.getNumStones() < MatchState.NUM_BASIC_STONES) {
-
-				}
-			}
-			if (MatchState.instance.phase == MatchState.BASIC_PHASE) {
-				if (_gameModel.getNumStones() == MatchState.NUM_BASIC_STONES) {
-						playerToMove(null);
-				}
-			} else {
-				playerToMove(null);
 			}
 			//switchPlayerMove();
 		}

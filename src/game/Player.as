@@ -58,6 +58,8 @@ public class Player extends EventDispatcher {
 		var stoneVO:StoneVO = MatchState.instance.getLastStone();
 		if (stoneVO.color == _vo.color) {
 			dispatchEvent(new PlayerEvent(PlayerEvent.MOVE, stoneVO.x, stoneVO.y));
+		} else {
+			trace("new stone not of this player [Player.onNewStone]");
 		}
 	}
 

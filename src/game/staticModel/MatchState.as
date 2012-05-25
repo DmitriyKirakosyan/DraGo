@@ -51,6 +51,7 @@ public class MatchState extends EventDispatcher{
 		return null;
 	}
 
+	public function get stones():Vector.<StoneVO> { return _stones; }
 	public function get movePlayer():String { return _movePlayer; }
 	public function get phase():String { return _phase; }
 
@@ -70,8 +71,8 @@ public class MatchState extends EventDispatcher{
 			}
 
 			updateMovePlayer(game["move_player"]);
-			updatePhase(game["phase"]);
 			updateStones(game["stones"]);
+			updatePhase(game["phase"]);
 
 		} else if (_started) {
 			_started = false;
@@ -113,12 +114,22 @@ public class MatchState extends EventDispatcher{
 
 	private function getNewStones(stones:Array):Vector.<StoneVO> {
 		var result:Vector.<StoneVO>;
-		var remoteStonesLength:int = stones.length;
-		for (var i:int = 0; i < remoteStonesLength - _stones.length; ++i) {
-			if (!result) { result = new Vector.<StoneVO>(); }
-			result.push(StoneVO.createStoneByObject(stones[0])); //only if player can only one move
+		for (var i:int = 0; i < stones.length; ++i) {
+			if (!stoneExists(stones[i]["x"], stones[i]["y"])) {
+				if (!result) { result = new Vector.<StoneVO>(); }
+				result.push(StoneVO.createStoneByObject(stones[i]));
+			}
 		}
 		return result;
+	}
+
+	private function stoneExists(x:int, y:int):Boolean {
+		for each (var stoneVO:StoneVO in _stones) {
+			if (stoneVO.x == x && stoneVO.y == y) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private function addStone(stoneVO:StoneVO):void {
