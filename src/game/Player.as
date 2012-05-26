@@ -24,7 +24,7 @@ public class Player extends EventDispatcher {
 	public function Player(vo:PlayerVO) {
 		super();
 		_vo = vo;
-		_home = vo.userId == UserState.instance.userId;
+		_home = !vo || vo.userId == UserState.instance.userId;
 		addListeners();
 	}
 

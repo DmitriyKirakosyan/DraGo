@@ -40,6 +40,7 @@ public class GameController extends EventDispatcher implements IScene {
 		_gameModel = new GameModel();
 		MatchState.instance.addEventListener(MatchStateEvent.CHANGE_MOVE_PLAYER, onMovePlayerChange);
 		MatchState.instance.addEventListener(MatchStateEvent.PHASE_CHANGED, onMatchPhaseChanged);
+		MatchState.instance.addEventListener(MatchStateEvent.GAME_STOPPED, onGameStopped);
 	}
 
 	public function set whitePlayer(value:Player):void {
@@ -89,7 +90,14 @@ public class GameController extends EventDispatcher implements IScene {
 				makeMove(stoneVO);
 			}
 			playerToMove(MatchState.instance.movePlayer == MatchState.instance.whitePlayer.userId ? _whitePlayer : _blackPlayer);
+		} else if (MatchState.instance.phase == MatchState.END_PHASE) {
+			playerToMove(null);
+			trace("end game");
 		}
+	}
+
+	private function onGameStopped(event:MatchStateEvent):void {
+		trace("game stopped [GameController.onGameStopped]");
 	}
 
 	private function playerToMove(playerToMove:Player):void {
@@ -112,12 +120,16 @@ public class GameController extends EventDispatcher implements IScene {
 
 	private function initObjects():void {
 		_gameContainer = new Sprite();
-		_gameContainer.graphics.beginFill(0xf33daa);
+		_gameContainer.graphics.beginFill(0xffffff);
 		_gameContainer.graphics.drawRect(0, 0, Main.WIDTH, Main.HEIGHT);
 		_gameContainer.graphics.endFill();
 		_boardView = new BoardView();
+		_boardView.addEventListener(MouseEvent.CLICK, onBoardViewClick);
 		_boardView.x = 20;
 		_boardView.y = 20;
+	}
+
+	private function onBoardViewClick(event:MouseEvent):void {
 	}
 
 	private function onPlayerMove(event:PlayerEvent):void {
@@ -159,7 +171,9 @@ public class GameController extends EventDispatcher implements IScene {
 
 	private function onClick(event:MouseEvent):void {
 		if (event.ctrlKey) {
-			dispatchEvent(new SceneEvent(SceneEvent.SWITCH_ME, this));
+			trace("try pass");
+			GameRpc.instance.pass(null, null);
+		//	dispatchEvent(new SceneEvent(SceneEvent.SWITCH_ME, this));
 		}
 	}
 }

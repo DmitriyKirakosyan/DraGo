@@ -72,6 +72,7 @@ handle_call({make_move, UserId, X, Y, _Hidden}, _From, State = #game{phase = ?BA
     end,
     {reply, Reply, NewState};
 
+
 %% main phase
 
 handle_call({make_move, UserId, X, Y, Hidden}, _From, State = #game{move_player=UserId, phase = ?MAIN_PHASE}) ->
@@ -79,6 +80,21 @@ handle_call({make_move, UserId, X, Y, Hidden}, _From, State = #game{move_player=
                                     true -> {black, State#game.white_user_id} end,
     NewState = State#game{move_player=MovePlayer, stones=[#stone{color=StoneColor, x=X, y=Y, hidden=Hidden} | State#game.stones]},
     {reply, {ok, move_saved}, NewState};
+
+handle_call({pass, UserId}, _From, State = #game{move_player=UserId, phase = ?MAIN_PHASE}) ->
+    {StoneColor, MovePlayer} = if UserId =:= State#game.white_user_id -> {white, State#game.black_user_id};
+                                    true -> {black, State#game.white_user_id} end,
+    StonesLength = lists:flatlength(State#game.stones),
+    {Reply, NewState} = case State#game.stones of
+        [Stone | _] when Stone#stone.color =:= StoneColor andalso StonesLength > 6 ->
+            {{ok, game_stopped}, State#game{phase=?END_PHASE}};
+        _Else ->
+            {{ok, pass_saved}, State#game{move_player=MovePlayer}}
+    end,
+
+    {reply, Reply, NewState};
+handle_call({pass, _UserId}, _From, State) ->
+    {reply, {error, denied}, State};
 
 handle_call({make_move, _UserId, _X, _Y, _Hidden}, _From, State) ->
     {reply, {error, denied}, State};

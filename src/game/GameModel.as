@@ -18,6 +18,7 @@ public class GameModel {
 	}
 
 	public function get lastStoneVO():StoneVO { return _lastStoneVO; }
+	public function get matrix():Vector.<Vector.<StoneVO>> { return _matrix; }
 
 	public function canMove(x:int, y:int):Boolean {
 		return _matrix[x][y] == null;
