@@ -31,7 +31,7 @@ handle(<<"make_move">>, RequestData, UserState) ->
     Hidden = proplists:get_value(<<"hidden">>, RequestData),
     {ok, UserState, game_room:make_move(UserId, X, Y, Hidden)};
 
-handle(<<"pass">>, RequestData, UserState) ->
+handle(<<"pass">>, _RequestData, UserState) ->
     UserId = UserState#user_state.user_id,
     {ok, UserState, game_room:pass(UserId)};
 
@@ -39,13 +39,13 @@ handle(<<"click_capture_stone">>, RequestData, UserState) ->
     UserId = UserState#user_state.user_id,
     X = proplists:get_value(<<"x">>, RequestData),
     Y = proplists:get_value(<<"y">>, RequestData),
-    {ok, UserState, game_room:click_capture_stone(UserId, x, y)};
+    {ok, UserState, game_room:click_capture_stone(UserId, X, Y)};
 
 handle(<<"unclick_capture_stone">>, RequestData, UserState) ->
     UserId = UserState#user_state.user_id,
     X = proplists:get_value(<<"x">>, RequestData),
     Y = proplists:get_value(<<"y">>, RequestData),
-    {ok, UserState, game_room:unclick_capture_stone(UserId, x, y)};
+    {ok, UserState, game_room:unclick_capture_stone(UserId, X, Y)};
 
 handle(<<"create_request">>, RequestData, UserState) ->
     FriendUserId = proplists:get_value(<<"friend_user_id">>, RequestData),

@@ -44,8 +44,9 @@ handle_call({get_game_state, UserId}, _From, State) ->
                         {y, Stone#stone.y}, {hidden, Stone#stone.hidden}, {basic, Stone#stone.basic}]
         end
     , Stones),
+    Clicks = lists:map( fun({X, Y}) -> [{x, X}, {y, Y}] end, State#game.clicks),
     Reply = [{phase, State#game.phase}, {white_user_id, State#game.white_user_id}, {black_user_id, State#game.black_user_id},
-                {move_player, MovePlayer}, {stones, EncodedStones}],
+                {move_player, MovePlayer}, {stones, EncodedStones}, {clicks, Clicks}],
     {reply, {ok, [{game, Reply}]}, State};
 
 %% move %%
@@ -95,7 +96,7 @@ handle_call({pass, UserId}, _From, State = #game{move_player=UserId, phase = ?MA
 
 %% end phase %%
 
-handle_call({click_capture_stone, _UserId, X, Y}, _From, State) ->
+handle_call({click_capture_stone, _UserId, X, Y}, _From, State = #game{phase = ?END_PHASE}) ->
     Clicks = State#game.clicks,
     case lists:member({X, Y}, Clicks) of
         false ->
@@ -103,7 +104,7 @@ handle_call({click_capture_stone, _UserId, X, Y}, _From, State) ->
         _True ->    {reply, {error, already_clicked}, State}
     end;
 
-handle_call({unclick_capture_stone, _UserId, X, Y}, _From, State) ->
+handle_call({unclick_capture_stone, _UserId, X, Y}, _From, State = #game{phase = ?END_PHASE}) ->
     {reply, {ok, deleted}, State#game{clicks=lists:delete({X, Y}, State#game.clicks)}};
 
 handle_call({pass, _UserId}, _From, State) ->

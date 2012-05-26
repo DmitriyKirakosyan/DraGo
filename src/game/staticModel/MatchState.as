@@ -6,6 +6,9 @@
 package game.staticModel {
 import flash.events.Event;
 import flash.events.EventDispatcher;
+import flash.geom.Point;
+
+import game.events.MatchStateClickEvent;
 
 import game.events.MatchStateEvent;
 import game.player.PlayerVO;
@@ -13,11 +16,14 @@ import game.player.PlayerVO;
 import game.staticModel.UserState;
 import game.stone.StoneVO;
 
+import org.osmf.layout.PaddingLayoutMetadata;
+
 public class MatchState extends EventDispatcher{
 	private static var _instance:MatchState;
 
 	private var _started:Boolean;
 	private var _stones:Vector.<StoneVO>;
+	private var _clicks:Vector.<Point>;
 	private var _movePlayer:String;
 	private var _whitePlayer:PlayerVO;
 	private var _blackPlayer:PlayerVO;
@@ -41,6 +47,7 @@ public class MatchState extends EventDispatcher{
 	public function init():void {
 		_started = false;
 		_stones = new Vector.<StoneVO>();
+		_clicks = new Vector.<Point>();
 		UserState.instance.addEventListener(Event.CHANGE, onStateUpdate);
 	}
 
@@ -51,7 +58,15 @@ public class MatchState extends EventDispatcher{
 		return null;
 	}
 
+	public function getLastClick():Point {
+		if (_clicks && _clicks.length > 0) {
+			return _clicks[_clicks.length-1];
+		}
+		return null;
+	}
+
 	public function get stones():Vector.<StoneVO> { return _stones; }
+	public function get clicks():Vector.<Point> { return _clicks; }
 	public function get movePlayer():String { return _movePlayer; }
 	public function get phase():String { return _phase; }
 
@@ -73,6 +88,7 @@ public class MatchState extends EventDispatcher{
 			updateMovePlayer(game["move_player"]);
 			updateStones(game["stones"]);
 			updatePhase(game["phase"]);
+			updateClicks(game["clicks"]);
 
 		} else if (_started) {
 			_started = false;
@@ -105,6 +121,42 @@ public class MatchState extends EventDispatcher{
 		}
 	}
 
+	private function getUnclicks(clicks:Array):Vector.<Point> {
+		var unclicks:Vector.<Point> = new Vector.<Point>();
+		var founded:Boolean;
+		for each (var point:Point in _clicks) {
+			founded = false;
+			for each (var clickObject:Object in clicks) {
+				if (clickObject["x"] == point.x && clickObject["y"] == point.y) {
+					founded = true;
+				}
+			}
+			if (!founded) {
+				unclicks.push(point);
+			}
+		}
+		return unclicks;
+	}
+
+	private function updateClicks(clicks:Array):void {
+		var unclicks:Vector.<Point> = getUnclicks(clicks);
+		var index:int;
+		for each (var point:Point in unclicks) {
+			index = _clicks.indexOf(point);
+			if (index != -1) {
+				_clicks.splice(index, 1);
+				dispatchEvent(new MatchStateClickEvent(MatchStateClickEvent.UNCLICK, point.x, point.y));
+			}
+		}
+
+		for (var i:int = 0; i < clicks.length; ++i) {
+			if (!clickExists(clicks[i]["x"], clicks[i]["y"])) {
+				_clicks.push(new Point(clicks[i]["x"], clicks[i]["y"]));
+				dispatchEvent(new MatchStateClickEvent(MatchStateClickEvent.CLICK, clicks[i]["x"], clicks[i]["y"]));
+			}
+		}
+	}
+
 	private function updateStones(stones:Array):void {
 		var newStones:Vector.<StoneVO> = getNewStones(stones);
 			for each (var stoneVO:StoneVO in newStones) {
@@ -126,6 +178,15 @@ public class MatchState extends EventDispatcher{
 	private function stoneExists(x:int, y:int):Boolean {
 		for each (var stoneVO:StoneVO in _stones) {
 			if (stoneVO.x == x && stoneVO.y == y) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private function clickExists(x:int, y:int):Boolean {
+		for each (var point:Point in _clicks) {
+			if (point.x == x && point.y == y) {
 				return true;
 			}
 		}

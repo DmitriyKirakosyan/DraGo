@@ -43,6 +43,13 @@ package rpc {
 			send({request: "pass"}, callback, errCallback);
 		}
 
+		public function click_capture_stone(x:int, y:int, callback:Function, errCallback:Function):void {
+			send({request: "click_capture_stone", x: x,  y: y}, callback, errCallback);
+		}
+		public function unclick_capture_stone(x:int, y:int, callback:Function, errCallback:Function):void {
+			send({request: "unclick_capture_stone", x: x,  y: y}, callback, errCallback);
+		}
+
 		public function createRequest(userFor:String, callback:Function, errCallback:Function):void {
 			send({request: "create_request", friend_user_id: userFor}, callback, errCallback);
 		}

@@ -14,6 +14,7 @@ import game.GameModel;
 import game.Player;
 import game.estimate.MatchEstimator;
 import game.events.BoardViewEvent;
+import game.events.MatchStateClickEvent;
 import game.events.MatchStateEvent;
 import game.staticModel.MatchState;
 import game.stone.StoneVO;
@@ -46,7 +47,6 @@ public class GameController extends EventDispatcher implements IScene {
 		_estimator =  new MatchEstimator(_gameModel);
 		MatchState.instance.addEventListener(MatchStateEvent.CHANGE_MOVE_PLAYER, onMovePlayerChange);
 		MatchState.instance.addEventListener(MatchStateEvent.PHASE_CHANGED, onMatchPhaseChanged);
-		MatchState.instance.addEventListener(MatchStateEvent.GAME_STOPPED, onGameStopped);
 	}
 
 	public function set whitePlayer(value:Player):void {
@@ -85,6 +85,13 @@ public class GameController extends EventDispatcher implements IScene {
 
 	private function startGame():void {
 	}
+	private function endGame():void {
+		trace("end game");
+		playerToMove(null);
+		estimate();
+		MatchState.instance.addEventListener(MatchStateClickEvent.CLICK, onNewClick);
+		MatchState.instance.addEventListener(MatchStateClickEvent.UNCLICK, onNewUnClick);
+	}
 
 	private function onMovePlayerChange(event:MatchStateEvent):void {
 		playerToMove(MatchState.instance.movePlayer == MatchState.instance.whitePlayer.userId ? _whitePlayer : _blackPlayer);
@@ -97,14 +104,23 @@ public class GameController extends EventDispatcher implements IScene {
 			}
 			playerToMove(MatchState.instance.movePlayer == MatchState.instance.whitePlayer.userId ? _whitePlayer : _blackPlayer);
 		} else if (MatchState.instance.phase == MatchState.END_PHASE) {
-			playerToMove(null);
-			trace("end game");
-			estimate();
+			endGame();
 		}
 	}
 
-	private function onGameStopped(event:MatchStateEvent):void {
-		trace("game stopped [GameController.onGameStopped]");
+	private function onNewClick(event:MatchStateClickEvent):void {
+		var click:Point = new Point(event.x, event.y);
+		if (!_estimator.hasCapturedPoint(click)) {
+			_estimator.addCapturedStone(click);
+			estimate();
+		}
+	}
+	private function onNewUnClick(event:MatchStateClickEvent):void {
+		var click:Point = new Point(event.x, event.y);
+		if (_estimator.hasCapturedPoint(click)) {
+			_estimator.removeCapturedStone(click);
+			estimate();
+		}
 	}
 
 	private function playerToMove(playerToMove:Player):void {
@@ -142,8 +158,10 @@ public class GameController extends EventDispatcher implements IScene {
 			var point:Point = new Point(event.cellX, event.cellY);
 			if (_estimator.hasCapturedPoint(point)) {
 				_estimator.removeCapturedStone(point);
+				GameRpc.instance.unclick_capture_stone(point.x, point.y, null, null);
 			} else {
 				_estimator.addCapturedStone(point);
+				GameRpc.instance.click_capture_stone(point.x, point.y, null, null);
 			}
 			estimate();
 		}
