@@ -7,11 +7,13 @@ package controller {
 import flash.display.Sprite;
 import flash.events.EventDispatcher;
 import flash.events.MouseEvent;
+import flash.geom.Point;
 
 import game.BoardView;
 import game.GameModel;
 import game.Player;
 import game.estimate.MatchEstimator;
+import game.events.BoardViewEvent;
 import game.events.MatchStateEvent;
 import game.staticModel.MatchState;
 import game.stone.StoneVO;
@@ -33,12 +35,15 @@ public class GameController extends EventDispatcher implements IScene {
 
 	private var _playerToMove:Player;
 
+	private var _estimator:MatchEstimator;
+
 	public static const ROWS_NUM:int = 11;
 
 	public function GameController(container:Sprite):void {
 		_container = container;
 		initObjects();
 		_gameModel = new GameModel();
+		_estimator =  new MatchEstimator(_gameModel);
 		MatchState.instance.addEventListener(MatchStateEvent.CHANGE_MOVE_PLAYER, onMovePlayerChange);
 		MatchState.instance.addEventListener(MatchStateEvent.PHASE_CHANGED, onMatchPhaseChanged);
 		MatchState.instance.addEventListener(MatchStateEvent.GAME_STOPPED, onGameStopped);
@@ -126,41 +131,47 @@ public class GameController extends EventDispatcher implements IScene {
 		_gameContainer.graphics.drawRect(0, 0, Main.WIDTH, Main.HEIGHT);
 		_gameContainer.graphics.endFill();
 		_boardView = new BoardView();
-		_boardView.addEventListener(MouseEvent.CLICK, onBoardViewClick);
+		_boardView.addEventListener(BoardViewEvent.CLICK, onBoardViewClick);
 		_boardView.x = 20;
 		_boardView.y = 20;
 	}
 
-	private function onBoardViewClick(event:MouseEvent):void {
+	private function onBoardViewClick(event:BoardViewEvent):void {
+		if (!_gameModel.emptyPoint(event.cellX, event.cellY) &&
+				MatchState.instance.phase == MatchState.END_PHASE) {
+			_estimator.addCapturedStone(new Point(event.cellX, event.cellY));
+		}
 	}
 
 	private function onPlayerMove(event:PlayerEvent):void {
 		var color:uint = (event.target as Player).vo.color;
 		var basic:Boolean = MatchState.instance.phase == MatchState.BASIC_PHASE;
 		var stoneVO:StoneVO = new StoneVO(color, event.x, event.y, false, basic);
-		makeMove(stoneVO);
-		if ((event.target as Player).home) {
-			GameRpc.instance.makeMove(stoneVO.x, stoneVO.y, false, null, null);
-		}
-		if (MatchState.instance.phase == MatchState.BASIC_PHASE) {
-			if (_gameModel.getNumStones() == MatchState.NUM_BASIC_STONES) {
-					playerToMove(null);
+		if (makeMove(stoneVO)) {
+			if ((event.target as Player).home) {
+				GameRpc.instance.makeMove(stoneVO.x, stoneVO.y, false, null, null);
 			}
-		} else if ((event.target as Player).home) {
-			playerToMove(null);
+			if (MatchState.instance.phase == MatchState.BASIC_PHASE) {
+				if (_gameModel.getNumStones() == MatchState.NUM_BASIC_STONES) {
+					playerToMove(null);
+				}
+			} else if ((event.target as Player).home) {
+				playerToMove(null);
+			}
 		}
 	}
 
 	private function estimate():void {
-		var estimator:MatchEstimator =  new MatchEstimator(_gameModel);
-		estimator.estimate();
-		trace("length white points : " + estimator.whitePoints().length);
-		trace("length black points : " + estimator.blackPoints().length);
+		_estimator.estimate();
+		trace("length white points : " + _estimator.whitePoints().length);
+		trace("length black points : " + _estimator.blackPoints().length);
 		trace("[GameController.estimate]");
+		_boardView.showTerritory(StoneVO.WHITE, _estimator.whitePoints());
+		_boardView.showTerritory(StoneVO.BLACK, _estimator.blackPoints());
 	}
 
-	private function makeMove(stoneVO:StoneVO):void {
-		if (_gameModel.canMove(stoneVO.x, stoneVO.y)) {
+	private function makeMove(stoneVO:StoneVO):Boolean {
+		if (_gameModel.emptyPoint(stoneVO.x, stoneVO.y)) {
 			_gameModel.addStone(stoneVO);
 			_boardView.addStone(stoneVO);
 			var deadStones:Vector.<StoneVO> = _gameModel.getDeadStones();
@@ -169,7 +180,10 @@ public class GameController extends EventDispatcher implements IScene {
 				_boardView.removeStones(deadStones);
 			}
 			//switchPlayerMove();
+		} else {
+			return false;
 		}
+		return true;
 	}
 
 	private function addListeners():void {

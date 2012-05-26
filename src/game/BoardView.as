@@ -8,10 +8,13 @@ import controller.*;
 
 import flash.display.Sprite;
 import flash.events.MouseEvent;
+import flash.geom.Point;
 
 import game.events.BoardViewEvent;
 import game.stone.StoneVO;
 import game.stone.StoneView;
+
+import org.osmf.layout.PaddingLayoutMetadata;
 
 public class BoardView extends Sprite {
 	public static const CELL_WIDTH:Number = 40;
@@ -38,11 +41,20 @@ public class BoardView extends Sprite {
 		addChild(stoneView);
 	}
 
-
-
 	public function removeStones(stoneVOs:Vector.<StoneVO>):void {
 		for each (var stoneVO:StoneVO in stoneVOs) {
 			removeStone(stoneVO);
+		}
+	}
+
+	public function showTerritory(color:uint, points:Vector.<Point>):void {
+		var stoneView:StoneView;
+		for each (var point:Point in points) {
+			stoneView = new StoneView(new StoneVO(color, point.x, point.y));
+			stoneView.x = point.x * CELL_WIDTH + BORDER_WIDTH;
+			stoneView.y = point.y * CELL_HEIGHT + BORDER_WIDTH;
+			stoneView.scaleX = stoneView.scaleY = .5;
+			addChild(stoneView);
 		}
 	}
 
