@@ -139,7 +139,13 @@ public class GameController extends EventDispatcher implements IScene {
 	private function onBoardViewClick(event:BoardViewEvent):void {
 		if (!_gameModel.emptyPoint(event.cellX, event.cellY) &&
 				MatchState.instance.phase == MatchState.END_PHASE) {
-			_estimator.addCapturedStone(new Point(event.cellX, event.cellY));
+			var point:Point = new Point(event.cellX, event.cellY);
+			if (_estimator.hasCapturedPoint(point)) {
+				_estimator.removeCapturedStone(point);
+			} else {
+				_estimator.addCapturedStone(point);
+			}
+			estimate();
 		}
 	}
 
@@ -166,6 +172,7 @@ public class GameController extends EventDispatcher implements IScene {
 		trace("length white points : " + _estimator.whitePoints().length);
 		trace("length black points : " + _estimator.blackPoints().length);
 		trace("[GameController.estimate]");
+		_boardView.cleanTerritory();
 		_boardView.showTerritory(StoneVO.WHITE, _estimator.whitePoints());
 		_boardView.showTerritory(StoneVO.BLACK, _estimator.blackPoints());
 	}

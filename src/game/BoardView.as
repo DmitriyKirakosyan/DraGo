@@ -22,6 +22,7 @@ public class BoardView extends Sprite {
 	public static const BORDER_WIDTH:Number = 20;
 
 	private var _stones:Vector.<StoneView>;
+	private var _territoryStones:Vector.<StoneView>;
 
 	public function BoardView() {
 		super();
@@ -54,8 +55,16 @@ public class BoardView extends Sprite {
 			stoneView.x = point.x * CELL_WIDTH + BORDER_WIDTH;
 			stoneView.y = point.y * CELL_HEIGHT + BORDER_WIDTH;
 			stoneView.scaleX = stoneView.scaleY = .5;
+			if (!_territoryStones) { _territoryStones = new Vector.<StoneView>(); }
+			_territoryStones.push(stoneView);
 			addChild(stoneView);
 		}
+	}
+	public function cleanTerritory():void {
+		for each (var stone:StoneView in _territoryStones) {
+			if (contains(stone)) { removeChild(stone); }
+		}
+		_territoryStones = null;
 	}
 
 	private function removeStone(stoneVO:StoneVO):void {

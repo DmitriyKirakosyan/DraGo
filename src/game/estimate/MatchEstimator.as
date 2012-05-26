@@ -38,6 +38,11 @@ public class MatchEstimator {
 	public function whitePoints():Vector.<Point> { return _whitePoints; }
 	public function blackPoints():Vector.<Point> { return _blackPoints; }
 
+	public function hasCapturedPoint(point:Point):Boolean {
+		var stone:StoneVO = _matrix[point.x][point.y];
+		return stone && isCapturedStone(stone);
+	}
+
 	public function addCapturedStone(point:Point):void {
 		var stone:StoneVO = _matrix[point.x][point.y];
 		if (!stone) { return; }
@@ -47,6 +52,19 @@ public class MatchEstimator {
 			_capturedStonesCollection.push(capturedStones);
 		}
 		trace("captured stones length : " + capturedStones.length + " [MatchEstimator.addCapturedStone]");
+	}
+	public function removeCapturedStone(point:Point):void {
+		var stone:StoneVO = _matrix[point.x][point.y];
+		var index:int = -1;
+		for (var i:int = 0; i < _capturedStonesCollection.length; ++i) {
+			if (_capturedStonesCollection[i].indexOf(stone) != -1) {
+				index = i;
+				break;
+			}
+		}
+		if (index != -1) {
+			_capturedStonesCollection.splice(index, 1);
+		}
 	}
 
 
@@ -84,7 +102,7 @@ public class MatchEstimator {
 		} else {
 			wasPoints.push(point);
 		}
-		if (_matrix[point.x][point.y]) {
+		if (_matrix[point.x][point.y] && !isCapturedStone(_matrix[point.x][point.y])) {
 			if (colorContainer["color"] && colorContainer["color"] != NONE) {
 				var color:uint = colorContainer["color"] == "white" ? StoneVO.WHITE : StoneVO.BLACK;
 				if (color != _matrix[point.x][point.y].color) {
