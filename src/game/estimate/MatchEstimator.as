@@ -36,39 +36,57 @@ public class MatchEstimator {
 	private function estimate():void {
 		_whitePoints = new Vector.<Point>();
 		_blackPoints = new Vector.<Point>();
+		var wasPoints:Vector.<Point> = new Vector.<Point>();
 		var estimatingPoints:Vector.<Point> = new Vector.<Point>();
+		var capturedByColor:String;
 
 		for (var i:int = 0; i < GameController.ROWS_NUM; ++i) {
 			for (var j:int = 0; j < GameController.ROWS_NUM; ++j) {
-				findCapturedStone(null, new Point(i, j), estimatingPoints);
+				capturedByColor = "";
+				findCapturedStone(capturedByColor, new Point(i, j), estimatingPoints, wasPoints);
+				if (estimatingPoints.length > 0) {
+					for each (var point:Point in estimatingPoints) {
+						if (capturedByColor == WHITE) {
+							_whitePoints.push(point);
+						} else if (capturedByColor == BLACK) {
+							_blackPoints.push(point);
+						}
+						wasPoints.push(point);
+					}
+					estimatingPoints = new Vector.<Point>();
+				}
 			}
 		}
 	}
 
-	private function findCapturedStone(capturedByColor:uint, point:Point, capturedPoints:Vector.<Point>,
-																					 wasPoins:Vector.<StoneVO> = new Vector.<StoneVO>(), finished:Boolean = false):Boolean {
+	private function findCapturedStone(capturedByColor:String, point:Point, capturedPoints:Vector.<Point>,
+																					 wasPoints:Vector.<Point> = new Vector.<Point>(), finished:Boolean = false):Boolean {
 
 		if (_matrix[point.x][point.y]) {
-			if (capturedByColor && capturedByColor != _matrix[point.x][point.y].color) {
-				capturedPoints.splice(0, capturedPoints.length);
-				return true;
-			} else { capturedByColor = _matrix[point.x][point.y].color; }
+			if (capturedByColor != "") {
+				var color:uint = capturedByColor == "white" ? StoneVO.WHITE : StoneVO.BLACK;
+				if (color != _matrix[point.x][point.y].color) {
+					//capturedPoints.splice(0, capturedPoints.length);
+					capturedByColor = "";
+					return true;
+				}
+			} else { capturedByColor = _matrix[point.x][point.y].color == StoneVO.WHITE ? WHITE : BLACK; }
 		} else {
-			if ((wasPoins.indexOf(point) == -1) && !finished) {
-				wasPoins.push(point);
+			if ((wasPoints.indexOf(point) == -1) && !finished) {
+				wasPoints.push(point);
 				capturedPoints.push(point);
 
 				if (validPoint(point.x-1, point.y)) {
-					finished = findCapturedStone(capturedByColor, new Point(point.x-1, point.y), capturedPoints, wasPoins, finished);
+					finished = findCapturedStone(capturedByColor, new Point(point.x-1, point.y), capturedPoints, wasPoints, finished);
 				}
 				if (validPoint(point.x, point.y-1)) {
-					finished = findCapturedStone(capturedByColor, new Point(point.x, point.y-1), capturedPoints, wasPoins, finished);
+					finished = findCapturedStone(capturedByColor, new Point(point.x, point.y-1), capturedPoints, wasPoints, finished);
 				}
 				if (validPoint(point.x+1, point.y)) {
-					finished = findCapturedStone(capturedByColor, new Point(point.x+1, point.y), capturedPoints, wasPoins, finished);
+					finished = findCapturedStone(capturedByColor, new Point(point.x+1, point.y), capturedPoints, wasPoints, finished);
 				}
 				if (validPoint(point.x, point.y+1)) {
-					finished = findCapturedStone(capturedByColor, new Point(point.x, point.y+1), capturedPoints, wasPoins, finished);
+					finished = findCapturedStone(capturedByColor, new Point(point.x, point.y+1), capturedPoints, wasPoints, finished);
 				}
 			}
 		}
