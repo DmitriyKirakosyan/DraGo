@@ -6,6 +6,8 @@
  * To change this template use File | Settings | File Templates.
  */
 package game.estimate {
+import avmplus.finish;
+
 import game.*;
 
 import controller.GameController;
@@ -22,6 +24,7 @@ public class MatchEstimator {
 
 	private const WHITE:String = "white";
 	private const BLACK:String = "black";
+	private const NONE:String = "none";
 
 	public function MatchEstimator(gameModel:GameModel):void {
 		super();
@@ -33,25 +36,26 @@ public class MatchEstimator {
 	public function blackPoints():Vector.<Point> { return _blackPoints; }
 
 
-	private function estimate():void {
+	public function estimate():void {
 		_whitePoints = new Vector.<Point>();
 		_blackPoints = new Vector.<Point>();
 		var wasPoints:Vector.<Point> = new Vector.<Point>();
 		var estimatingPoints:Vector.<Point> = new Vector.<Point>();
-		var capturedByColor:String;
+		var capturedByColor:Object;
 
 		for (var i:int = 0; i < GameController.ROWS_NUM; ++i) {
 			for (var j:int = 0; j < GameController.ROWS_NUM; ++j) {
-				capturedByColor = "";
+				capturedByColor = {};
 				findCapturedStone(capturedByColor, new Point(i, j), estimatingPoints, wasPoints);
 				if (estimatingPoints.length > 0) {
 					for each (var point:Point in estimatingPoints) {
-						if (capturedByColor == WHITE) {
+						if (capturedByColor["color"] == WHITE) {
 							_whitePoints.push(point);
-						} else if (capturedByColor == BLACK) {
+						} else if (capturedByColor["color"] == BLACK) {
 							_blackPoints.push(point);
 						}
-						wasPoints.push(point);
+						removeStonesPointsFrom(wasPoints);
+						//wasPoints.push(point);
 					}
 					estimatingPoints = new Vector.<Point>();
 				}
@@ -59,38 +63,62 @@ public class MatchEstimator {
 		}
 	}
 
-	private function findCapturedStone(capturedByColor:String, point:Point, capturedPoints:Vector.<Point>,
-																					 wasPoints:Vector.<Point> = new Vector.<Point>(), finished:Boolean = false):Boolean {
-
-		if (_matrix[point.x][point.y]) {
-			if (capturedByColor != "") {
-				var color:uint = capturedByColor == "white" ? StoneVO.WHITE : StoneVO.BLACK;
-				if (color != _matrix[point.x][point.y].color) {
-					//capturedPoints.splice(0, capturedPoints.length);
-					capturedByColor = "";
-					return true;
-				}
-			} else { capturedByColor = _matrix[point.x][point.y].color == StoneVO.WHITE ? WHITE : BLACK; }
+	private function findCapturedStone(colorContainer:Object, point:Point, capturedPoints:Vector.<Point>,
+																					 wasPoints:Vector.<Point>, finished:Boolean = false):Boolean {
+		if (hasPointInVector(point.x, point.y, wasPoints)) {
+			return finished;
 		} else {
-			if ((wasPoints.indexOf(point) == -1) && !finished) {
-				wasPoints.push(point);
+			wasPoints.push(point);
+		}
+		if (_matrix[point.x][point.y]) {
+			if (colorContainer["color"] && colorContainer["color"] != NONE) {
+				var color:uint = colorContainer["color"] == "white" ? StoneVO.WHITE : StoneVO.BLACK;
+				if (color != _matrix[point.x][point.y].color) {
+					colorContainer["color"] = NONE;
+				}
+			} else if (colorContainer["color"] != NONE) { colorContainer["color"] = _matrix[point.x][point.y].color == StoneVO.WHITE ? WHITE : BLACK; }
+		} else {
+			if (!finished) {
 				capturedPoints.push(point);
 
 				if (validPoint(point.x-1, point.y)) {
-					finished = findCapturedStone(capturedByColor, new Point(point.x-1, point.y), capturedPoints, wasPoints, finished);
+					finished = findCapturedStone(colorContainer, new Point(point.x-1, point.y), capturedPoints, wasPoints, finished);
 				}
 				if (validPoint(point.x, point.y-1)) {
-					finished = findCapturedStone(capturedByColor, new Point(point.x, point.y-1), capturedPoints, wasPoints, finished);
+					finished = findCapturedStone(colorContainer, new Point(point.x, point.y-1), capturedPoints, wasPoints, finished);
 				}
 				if (validPoint(point.x+1, point.y)) {
-					finished = findCapturedStone(capturedByColor, new Point(point.x+1, point.y), capturedPoints, wasPoints, finished);
+					finished = findCapturedStone(colorContainer, new Point(point.x+1, point.y), capturedPoints, wasPoints, finished);
 				}
 				if (validPoint(point.x, point.y+1)) {
-					finished = findCapturedStone(capturedByColor, new Point(point.x, point.y+1), capturedPoints, wasPoints, finished);
+					finished = findCapturedStone(colorContainer, new Point(point.x, point.y+1), capturedPoints, wasPoints, finished);
 				}
 			}
 		}
 		return finished;
+	}
+
+	private function removeStonesPointsFrom(points:Vector.<Point>):void {
+		var pointsForRemove:Vector.<Point> = new Vector.<Point>();
+		for each (var point:Point in points) {
+			if (_matrix[point.x][point.y]) {
+				pointsForRemove.push(point);
+			}
+		}
+		var index:int;
+		for each (var pointForRemove:Point in pointsForRemove) {
+			index = points.indexOf(pointForRemove);
+			points.splice(index, 1);
+		}
+	}
+
+	private function hasPointInVector(x:int, y:int, vector:Vector.<Point>):Boolean {
+		for each (var point:Point in vector) {
+			if (x == point.x && y == point.y) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private function validPoint(x:int, y:int):Boolean {

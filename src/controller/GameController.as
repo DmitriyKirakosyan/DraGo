@@ -11,6 +11,7 @@ import flash.events.MouseEvent;
 import game.BoardView;
 import game.GameModel;
 import game.Player;
+import game.estimate.MatchEstimator;
 import game.events.MatchStateEvent;
 import game.staticModel.MatchState;
 import game.stone.StoneVO;
@@ -93,6 +94,7 @@ public class GameController extends EventDispatcher implements IScene {
 		} else if (MatchState.instance.phase == MatchState.END_PHASE) {
 			playerToMove(null);
 			trace("end game");
+			estimate();
 		}
 	}
 
@@ -147,6 +149,14 @@ public class GameController extends EventDispatcher implements IScene {
 		} else if ((event.target as Player).home) {
 			playerToMove(null);
 		}
+	}
+
+	private function estimate():void {
+		var estimator:MatchEstimator =  new MatchEstimator(_gameModel);
+		estimator.estimate();
+		trace("length white points : " + estimator.whitePoints().length);
+		trace("length black points : " + estimator.blackPoints().length);
+		trace("[GameController.estimate]");
 	}
 
 	private function makeMove(stoneVO:StoneVO):void {
