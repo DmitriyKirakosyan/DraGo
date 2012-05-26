@@ -91,8 +91,21 @@ handle_call({pass, UserId}, _From, State = #game{move_player=UserId, phase = ?MA
         _Else ->
             {{ok, pass_saved}, State#game{move_player=MovePlayer}}
     end,
-
     {reply, Reply, NewState};
+
+%% end phase %%
+
+handle_call({click_capture_stone, _UserId, X, Y}, _From, State) ->
+    Clicks = State#game.clicks,
+    case lists:member({X, Y}, Clicks) of
+        false ->
+            {reply, {ok, click_saved}, State#game{clicks = [{X, Y} | Clicks]}};
+        _True ->    {reply, {error, already_clicked}, State}
+    end;
+
+handle_call({unclick_capture_stone, _UserId, X, Y}, _From, State) ->
+    {reply, {ok, deleted}, State#game{clicks=lists:delete({X, Y}, State#game.clicks)}};
+
 handle_call({pass, _UserId}, _From, State) ->
     {reply, {error, denied}, State};
 
