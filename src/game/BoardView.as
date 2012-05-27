@@ -18,6 +18,7 @@ import game.stone.StoneVO;
 import game.stone.StoneView;
 
 import org.osmf.layout.PaddingLayoutMetadata;
+import org.osmf.metadata.TimelineMarker;
 
 public class BoardView extends Sprite {
 	public static const CELL_WIDTH:Number = 40;
@@ -86,6 +87,14 @@ public class BoardView extends Sprite {
 			if (contains(stone)) { removeChild(stone); }
 		}
 		_territoryStones = null;
+	}
+
+	public function showEnemyHiddenStoneEffect():void {
+		var thisBoardView:BoardView = this;
+		var timeline:TimelineMax = new TimelineMax({onComplete: function():void {thisBoardView.filters = []; }});
+		timeline.append( new TweenMax(this, .6, {glowFilter:{color: 0x00BFFF, alpha : 1, blurX: 20, blurY: 20, strength: 5}}));
+		timeline.append( new TweenMax(this, .6, {glowFilter:{color: 0x00BFFF, alpha : 0, blurX: 20, blurY: 20, strength: 5}}));
+		timeline.play();
 	}
 
 	private function createStone(stoneVO:StoneVO):StoneView {

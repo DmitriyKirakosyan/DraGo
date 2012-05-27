@@ -19,6 +19,8 @@ public class GameModel {
 		_hiddenStones = new Vector.<StoneVO>();
 	}
 
+	public function get lastStoneVO():StoneVO { return _lastStoneVO; }
+
 	public function cleanHiddenStones():void {
 		_hiddenStones = new Vector.<StoneVO>();
 	}
@@ -41,7 +43,7 @@ public class GameModel {
 
 	public function addStone(stoneVO:StoneVO):void {
 		if (!stoneVO) { return; }
-		_lastStoneVO = stoneVO;
+		if (!stoneVO.basic) { _lastStoneVO = stoneVO; }
 		_matrix[stoneVO.x][stoneVO.y] = stoneVO;
 	}
 
@@ -72,6 +74,7 @@ public class GameModel {
 
 	private function findDeadStones():Vector.<StoneVO> {
 		var result:Vector.<StoneVO> = new Vector.<StoneVO>();
+		if (!_lastStoneVO) { return result; }
 		var x:int = _lastStoneVO.x;
 		var y:int = _lastStoneVO.y;
 		var loopX:int;
