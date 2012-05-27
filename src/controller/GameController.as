@@ -17,6 +17,7 @@ import game.events.BoardViewEvent;
 import game.events.MatchStateClickEvent;
 import game.events.MatchStateEvent;
 import game.staticModel.MatchState;
+import game.staticModel.UserState;
 import game.stone.StoneVO;
 import game.events.PlayerEvent;
 
@@ -170,10 +171,10 @@ public class GameController extends EventDispatcher implements IScene {
 	private function onPlayerMove(event:PlayerEvent):void {
 		var color:uint = (event.target as Player).vo.color;
 		var basic:Boolean = MatchState.instance.phase == MatchState.BASIC_PHASE;
-		var stoneVO:StoneVO = new StoneVO(color, event.x, event.y, false, basic);
+		var stoneVO:StoneVO = new StoneVO(color, event.x, event.y, event.hidden, basic);
 		if (makeMove(stoneVO)) {
 			if ((event.target as Player).home) {
-				GameRpc.instance.makeMove(stoneVO.x, stoneVO.y, false, null, null);
+				GameRpc.instance.makeMove(stoneVO.x, stoneVO.y, stoneVO.hidden, null, null);
 			}
 			if (MatchState.instance.phase == MatchState.BASIC_PHASE) {
 				if (_gameModel.getNumStones() == MatchState.NUM_BASIC_STONES) {
@@ -198,11 +199,20 @@ public class GameController extends EventDispatcher implements IScene {
 	private function makeMove(stoneVO:StoneVO):Boolean {
 		if (_gameModel.emptyPoint(stoneVO.x, stoneVO.y)) {
 			_gameModel.addStone(stoneVO);
-			_boardView.addStone(stoneVO);
+			if (!stoneVO.hidden || getPlayerByColor(stoneVO.color).vo.userId == UserState.instance.userId) {
+				_boardView.addStone(stoneVO);
+			} else {
+				trace("stone is hidden [GameController.makeMove]");
+			}
 			var deadStones:Vector.<StoneVO> = _gameModel.getDeadStones();
 			if (deadStones.length > 0) {
 				_gameModel.removeStones(deadStones);
-				_boardView.removeStones(deadStones);
+				if (_gameModel.hiddenStones.length > 0) {
+					_boardView.showHiddenStonesThenRemoveDeads(_gameModel.hiddenStones, deadStones);
+					_gameModel.cleanHiddenStones();
+				} else {
+					_boardView.removeStones(deadStones);
+				}
 			}
 			//switchPlayerMove();
 		} else {
@@ -224,6 +234,10 @@ public class GameController extends EventDispatcher implements IScene {
 			GameRpc.instance.pass(null, null);
 		//	dispatchEvent(new SceneEvent(SceneEvent.SWITCH_ME, this));
 		}
+	}
+
+	private function getPlayerByColor(color:uint):Player {
+		return _whitePlayer.vo.color == color ? _whitePlayer : _blackPlayer;
 	}
 }
 }

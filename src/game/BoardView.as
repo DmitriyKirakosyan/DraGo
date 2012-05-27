@@ -4,6 +4,9 @@
  * Time: 7:57 PM
  */
 package game {
+import com.greensock.TimelineMax;
+import com.greensock.TweenMax;
+
 import controller.*;
 
 import flash.display.Sprite;
@@ -34,9 +37,7 @@ public class BoardView extends Sprite {
 	}
 
 	public function addStone(stoneVO:StoneVO):void {
-		var stoneView:StoneView = new StoneView(stoneVO);
-		stoneView.x = stoneVO.x * CELL_WIDTH + BORDER_WIDTH;
-		stoneView.y = stoneVO.y * CELL_HEIGHT + BORDER_WIDTH;
+		var stoneView = createStone(stoneVO);
 		if (!_stones) { _stones = new Vector.<StoneView>(); }
 		_stones.push(stoneView);
 		addChild(stoneView);
@@ -46,6 +47,22 @@ public class BoardView extends Sprite {
 		for each (var stoneVO:StoneVO in stoneVOs) {
 			removeStone(stoneVO);
 		}
+	}
+
+	public function showHiddenStonesThenRemoveDeads(hiddenStones:Vector.<StoneVO>, deads:Vector.<StoneVO>):void {
+		var timeline:TimelineMax = new TimelineMax({onComplete: function():void { removeStones(deads); }});
+		var stoneView:StoneView;
+		if (!_stones) { _stones = new Vector.<StoneView>(); }
+		for each (var hiddenStone:StoneVO in hiddenStones) {
+			if (!getStoneByVO(hiddenStone)) {
+				stoneView = createStone(hiddenStone);
+				_stones.push(stoneView);
+				addChild(stoneView);
+				stoneView.alpha = 0;
+				timeline.insert(new TweenMax(stoneView, .6, {alpha: 1}));
+			}
+		}
+		timeline.play();
 	}
 
 	public function showTerritory(color:uint, points:Vector.<Point>):void {
@@ -65,6 +82,13 @@ public class BoardView extends Sprite {
 			if (contains(stone)) { removeChild(stone); }
 		}
 		_territoryStones = null;
+	}
+
+	private function createStone(stoneVO:StoneVO):StoneView {
+		var stoneView:StoneView = new StoneView(stoneVO);
+		stoneView.x = stoneVO.x * CELL_WIDTH + BORDER_WIDTH;
+		stoneView.y = stoneVO.y * CELL_HEIGHT + BORDER_WIDTH;
+		return stoneView;
 	}
 
 	private function removeStone(stoneVO:StoneVO):void {
@@ -103,7 +127,7 @@ public class BoardView extends Sprite {
 		var stoneY:int = (event.localY + CELL_HEIGHT/2 - BORDER_WIDTH) / CELL_HEIGHT;
 		if (stoneX >= 0 && stoneX <= GameController.ROWS_NUM &&
 				stoneY >= 0 && stoneY <= GameController.ROWS_NUM) {
-			dispatchEvent(new BoardViewEvent(BoardViewEvent.CLICK, stoneX, stoneY));
+			dispatchEvent(new BoardViewEvent(BoardViewEvent.CLICK, stoneX, stoneY, event.shiftKey));
 		}
 	}
 

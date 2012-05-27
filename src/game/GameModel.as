@@ -11,13 +11,18 @@ import game.stone.StoneVO;
 public class GameModel {
 	private var _matrix:Vector.<Vector.<StoneVO>>;
 	private var _lastStoneVO:StoneVO;
+	private var _hiddenStones:Vector.<StoneVO>;
 
 	public function GameModel() {
 		super();
 		createMatrix();
+		_hiddenStones = new Vector.<StoneVO>();
 	}
 
-	public function get lastStoneVO():StoneVO { return _lastStoneVO; }
+	public function cleanHiddenStones():void {
+		_hiddenStones = new Vector.<StoneVO>();
+	}
+	public function get hiddenStones():Vector.<StoneVO> { return _hiddenStones; }
 	public function get matrix():Vector.<Vector.<StoneVO>> { return _matrix; }
 
 	public function emptyPoint(x:int, y:int):Boolean {
@@ -101,6 +106,8 @@ public class GameModel {
 			if (validPoint(stoneVO.x, stoneVO.y+1)) {
 				finished = findDeadStonesWithStone(color, _matrix[stoneVO.x][stoneVO.y+1], deadStones, wasStones, finished);
 			}
+		} else if (stoneVO.color != color && stoneVO.hidden) {
+			_hiddenStones.push(stoneVO);
 		}
 		return finished;
 	}

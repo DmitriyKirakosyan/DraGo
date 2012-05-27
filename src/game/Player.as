@@ -20,11 +20,13 @@ public class Player extends EventDispatcher {
 	private var _boardView:BoardView;
 	private var _vo:PlayerVO;
 	private var _home:Boolean;
+	private var _numHiddenStones:int;
 
 	public function Player(vo:PlayerVO) {
 		super();
 		_vo = vo;
 		_home = !vo || vo.userId == UserState.instance.userId;
+		_numHiddenStones = 1;
 		addListeners();
 	}
 
@@ -34,6 +36,7 @@ public class Player extends EventDispatcher {
 		}
 	}
 
+	public function get numHiddenStones():int { return _numHiddenStones; }
 	public function get vo():PlayerVO { return _vo; }
 	public function get home():Boolean { return _home; }
 
@@ -57,14 +60,19 @@ public class Player extends EventDispatcher {
 	private function onNewStone(event:MatchStateEvent):void {
 		var stoneVO:StoneVO = MatchState.instance.getLastStone();
 		if (stoneVO.color == _vo.color) {
-			dispatchEvent(new PlayerEvent(PlayerEvent.MOVE, stoneVO.x, stoneVO.y));
+			dispatchEvent(new PlayerEvent(PlayerEvent.MOVE, stoneVO.x, stoneVO.y, stoneVO.hidden));
 		} else {
 			trace("new stone not of this player [Player.onNewStone]");
 		}
 	}
 
 	private function onBoardViewClick(event:BoardViewEvent):void {
-		dispatchEvent(new PlayerEvent(PlayerEvent.MOVE, event.cellX, event.cellY));
+		var hidden:Boolean = false;
+		if (_numHiddenStones > 0 && event.shiftKey) {
+			_numHiddenStones--;
+			hidden = true;
+		}
+		dispatchEvent(new PlayerEvent(PlayerEvent.MOVE, event.cellX, event.cellY, hidden));
 	}
 }
 }
