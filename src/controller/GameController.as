@@ -264,6 +264,9 @@ public class GameController extends EventDispatcher implements IScene {
 				}
 			}
 		} else {
+			if (_gameModel.getStone(stoneVO.x, stoneVO.y).hidden) {
+				_boardView.justShowHiddenStone(_gameModel.getStone(stoneVO.x, stoneVO.y));
+			}
 			return false;
 		}
 		return true;

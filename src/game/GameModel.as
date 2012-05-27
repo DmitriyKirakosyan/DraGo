@@ -41,6 +41,13 @@ public class GameModel {
 		return result;
 	}
 
+	public function getStone(x:int, y:int):StoneVO {
+		if (validPoint(x, y)) {
+			return _matrix[x][y];
+		}
+		return null;
+	}
+
 	public function addStone(stoneVO:StoneVO):void {
 		if (!stoneVO) { return; }
 		if (!stoneVO.basic) { _lastStoneVO = stoneVO; }

@@ -70,6 +70,14 @@ public class BoardView extends Sprite {
 		timeline.play();
 	}
 
+	public function justShowHiddenStone(hiddenStone:StoneVO):void {
+		var stoneView:StoneView = createStone(hiddenStone);
+		_stones.push(stoneView);
+		addChild(stoneView);
+		stoneView.alpha = 0;
+		new TweenMax(stoneView, .6, {alpha: 1});
+	}
+
 	public function showTerritory(color:uint, points:Vector.<Point>):void {
 		var stoneView:StoneView;
 		for each (var point:Point in points) {
