@@ -86,9 +86,11 @@ public class MatchState extends EventDispatcher{
 			}
 
 			updateMovePlayer(game["move_player"]);
-			updateStones(game["stones"]);
 			updatePhase(game["phase"]);
+			updateStones(game["stones"]);
 			updateClicks(game["clicks"]);
+
+			dispatchEvent(new MatchStateEvent(MatchStateEvent.UPDATED));
 
 		} else if (_started) {
 			_started = false;
@@ -115,7 +117,12 @@ public class MatchState extends EventDispatcher{
 	private function updatePhase(phase:String):void {
 		if (!_phase || _phase != phase) {
 			if (phase) {
+				var prevPhase:String = _phase;
 				_phase = phase;
+				if (prevPhase == BASIC_PHASE && phase == MAIN_PHASE) {
+					_stones = new Vector.<StoneVO>();
+					dispatchEvent(new MatchStateEvent(MatchStateEvent.BASIC_PHASE_CHANGED_ON_MAIN_PHASE));
+				}
 				dispatchEvent(new MatchStateEvent(MatchStateEvent.PHASE_CHANGED));
 			}
 		}
@@ -167,7 +174,7 @@ public class MatchState extends EventDispatcher{
 	private function getNewStones(stones:Array):Vector.<StoneVO> {
 		var result:Vector.<StoneVO>;
 		for (var i:int = 0; i < stones.length; ++i) {
-			if (!stoneExists(stones[i]["x"], stones[i]["y"])) {
+			if (!stoneExists(stones[i]["x"], stones[i]["y"], stones[i]["number"])) {
 				if (!result) { result = new Vector.<StoneVO>(); }
 				result.push(StoneVO.createStoneByObject(stones[i]));
 			}
@@ -175,9 +182,9 @@ public class MatchState extends EventDispatcher{
 		return result;
 	}
 
-	private function stoneExists(x:int, y:int):Boolean {
+	private function stoneExists(x:int, y:int, number:int):Boolean {
 		for each (var stoneVO:StoneVO in _stones) {
-			if (stoneVO.x == x && stoneVO.y == y) {
+			if (stoneVO.x == x && stoneVO.y == y && stoneVO.number == number) {
 				return true;
 			}
 		}

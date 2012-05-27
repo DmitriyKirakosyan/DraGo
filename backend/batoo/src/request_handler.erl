@@ -7,7 +7,19 @@
 %% -spec handle(binary(), typle(), UserState) -> {ok, NewUserState, Reply}.
 
 handle(<<"get_state">>, _RequestData, UserState = #user_state{in_game=true}) ->
-    {ok, UserState, game_room:get_game_state(UserState#user_state.user_id)};
+    case game_room:get_game_state(UserState#user_state.user_id) of
+        %% if game not exists, change in_game to false and return user state
+        {error, game_not_found} ->
+            UserId = UserState#user_state.user_id,
+            {ok, AllRequests} = game_room:get_request_list_for(UserId),
+            RequestsForMe = [proplists:get_value(white_user_id, Request) || Request <- AllRequests, proplists:get_value(black_user_id, Request) =:= UserId],
+            RequestsByMe = [proplists:get_value(black_user_id, Request) || Request <- AllRequests, proplists:get_value(white_user_id, Request) =:= UserId],
+            RequestsObject = [{for_me, RequestsForMe}, {by_me, RequestsByMe}],
+            Reply = {ok, [{users, session_manager:get_users()}, {requests, RequestsObject}]},
+            {ok, UserState#user_state{in_game = false}, Reply};
+        GameState ->
+            {ok, UserState, GameState}
+    end;
 
 handle(<<"get_state">>, _RequestData, UserState) ->
     UserId = UserState#user_state.user_id,
@@ -46,6 +58,12 @@ handle(<<"unclick_capture_stone">>, RequestData, UserState) ->
     X = proplists:get_value(<<"x">>, RequestData),
     Y = proplists:get_value(<<"y">>, RequestData),
     {ok, UserState, game_room:unclick_capture_stone(UserId, X, Y)};
+
+handle(<<"set_result_opinion">>, RequestData, UserState) ->
+    UserId = UserState#user_state.user_id,
+    Opinion = proplists:get_value(<<"opinion">>, RequestData),
+    Reply = game_room:set_result_opinion(UserId, Opinion),
+    {ok, UserState, Reply};
 
 handle(<<"create_request">>, RequestData, UserState) ->
     FriendUserId = proplists:get_value(<<"friend_user_id">>, RequestData),

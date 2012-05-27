@@ -51,6 +51,14 @@ public class GameModel {
 		}
 	}
 
+	public function removeAllStones():void {
+		for (var i:int = 0; i < GameController.ROWS_NUM; ++i) {
+			for (var j:int = 0; j < GameController.ROWS_NUM; ++j) {
+				_matrix[i][j] = null;
+			}
+		}
+	}
+
 	public function getDeadStones():Vector.<StoneVO> {
 		return findDeadStones();
 	}

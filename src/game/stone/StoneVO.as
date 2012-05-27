@@ -6,6 +6,7 @@
 package game.stone {
 public class StoneVO {
 	private var _color:uint;
+	private var _number:int;
 	private var _x:int;
 	private var _y:int;
 	private var _hidden:Boolean;
@@ -15,7 +16,7 @@ public class StoneVO {
 	public static const BLACK:uint = 1;
 
 	public static function createStoneByObject(object:Object):StoneVO {
-		return new StoneVO(object["color"] == "white" ? WHITE : BLACK, object["x"], object["y"], object["hidden"], object["basic"]);
+		return new StoneVO(object["color"] == "white" ? WHITE : BLACK, object["x"], object["y"], object["hidden"], object["basic"], object["number"]);
 	}
 
 	public static function createWhiteStone(x:int, y:int):StoneVO {
@@ -25,12 +26,13 @@ public class StoneVO {
 		return new StoneVO(BLACK, x, y);
 	}
 
-	public function StoneVO(color:uint, x:int, y:int, hidden:Boolean = false, basic:Boolean = false) {
+	public function StoneVO(color:uint, x:int, y:int, hidden:Boolean = false, basic:Boolean = false, number:int = -1) {
 		_color = color;
 		_x = x;
 		_y = y;
 		_hidden = hidden;
 		_basic = basic;
+		_number = number;
 	}
 
 	public function get color():uint { return _color; }
@@ -41,5 +43,7 @@ public class StoneVO {
 
 	public function get x():int { return _x; }
 	public function get y():int { return _y; }
+
+	public function get number():int { return _number; }
 }
 }

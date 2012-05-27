@@ -21,14 +21,21 @@ public class Player extends EventDispatcher {
 	private var _vo:PlayerVO;
 	private var _home:Boolean;
 	private var _numHiddenStones:int;
+	private var _numPrisoners:int;
 
 	public function Player(vo:PlayerVO) {
 		super();
 		_vo = vo;
 		_home = !vo || vo.userId == UserState.instance.userId;
 		_numHiddenStones = 1;
+		_numPrisoners = 0;
 		addListeners();
 	}
+
+	public function addPrisoners(num:int):void {
+		_numPrisoners += num;
+	}
+	public function get numPrisoners():int { return _numPrisoners; }
 
 	public function remove():void {
 		if (_boardView) {
@@ -60,7 +67,7 @@ public class Player extends EventDispatcher {
 	private function onNewStone(event:MatchStateEvent):void {
 		var stoneVO:StoneVO = MatchState.instance.getLastStone();
 		if (stoneVO.color == _vo.color) {
-			dispatchEvent(new PlayerEvent(PlayerEvent.MOVE, stoneVO.x, stoneVO.y, stoneVO.hidden));
+			dispatchEvent(new PlayerEvent(PlayerEvent.MOVE, stoneVO.x, stoneVO.y, stoneVO.hidden, stoneVO.basic));
 		} else {
 			trace("new stone not of this player [Player.onNewStone]");
 		}

@@ -4,6 +4,10 @@
  * Time: 10:26 PM
  */
 package controller {
+import core.enum.WindowsENUM;
+import core.event.WindowEvent;
+import core.window.WindowManager;
+
 import flash.display.Sprite;
 import flash.events.EventDispatcher;
 import flash.events.MouseEvent;
@@ -16,6 +20,8 @@ import game.estimate.MatchEstimator;
 import game.events.BoardViewEvent;
 import game.events.MatchStateClickEvent;
 import game.events.MatchStateEvent;
+import game.iface.window.EndGameWindow;
+import game.staticModel.MatchState;
 import game.staticModel.MatchState;
 import game.staticModel.UserState;
 import game.stone.StoneVO;
@@ -48,6 +54,8 @@ public class GameController extends EventDispatcher implements IScene {
 		_estimator =  new MatchEstimator(_gameModel);
 		MatchState.instance.addEventListener(MatchStateEvent.CHANGE_MOVE_PLAYER, onMovePlayerChange);
 		MatchState.instance.addEventListener(MatchStateEvent.PHASE_CHANGED, onMatchPhaseChanged);
+		MatchState.instance.addEventListener(MatchStateEvent.BASIC_PHASE_CHANGED_ON_MAIN_PHASE, onStartMainPhase);
+		MatchState.instance.addEventListener(MatchStateEvent.GAME_STOPPED, onGameStopped);
 	}
 
 	public function set whitePlayer(value:Player):void {
@@ -98,15 +106,35 @@ public class GameController extends EventDispatcher implements IScene {
 		playerToMove(MatchState.instance.movePlayer == MatchState.instance.whitePlayer.userId ? _whitePlayer : _blackPlayer);
 	}
 
+	private function onStartMainPhase(event:MatchStateEvent):void {
+		_boardView.clear();
+		_gameModel.removeAllStones();
+		MatchState.instance.addEventListener(MatchStateEvent.UPDATED, onMatchUpdatedInMainPhase);
+	}
+	private function onMatchUpdatedInMainPhase(event:MatchStateEvent):void {
+		MatchState.instance.removeEventListener(MatchStateEvent.UPDATED, onMatchUpdatedInMainPhase)
+		for each (var stoneVO:StoneVO in MatchState.instance.stones) {
+			makeMove(stoneVO);
+		}
+	}
+
 	private function onMatchPhaseChanged(event:MatchStateEvent):void {
 		if (MatchState.instance.phase == MatchState.MAIN_PHASE) {
-			for each (var stoneVO:StoneVO in MatchState.instance.stones) {
-				makeMove(stoneVO);
-			}
 			playerToMove(MatchState.instance.movePlayer == MatchState.instance.whitePlayer.userId ? _whitePlayer : _blackPlayer);
 		} else if (MatchState.instance.phase == MatchState.END_PHASE) {
 			endGame();
 		}
+	}
+
+	private function onGameStopped(event:MatchStateEvent):void {
+		var endWindow:EndGameWindow = WindowManager.instance.getWindow(WindowsENUM.End_WINDOW) as EndGameWindow;
+		endWindow.okBtn.addEventListener(MouseEvent.CLICK, onEndBtnClick);
+		WindowManager.instance.showWindow(WindowsENUM.End_WINDOW);
+	}
+	private function onEndBtnClick(event:MouseEvent):void {
+		var endWindow:EndGameWindow = WindowManager.instance.getWindow(WindowsENUM.End_WINDOW) as EndGameWindow;
+		endWindow.okBtn.removeEventListener(MouseEvent.CLICK, onEndBtnClick);
+		dispatchEvent(new SceneEvent(SceneEvent.SWITCH_ME, this));
 	}
 
 	private function onNewClick(event:MatchStateClickEvent):void {
@@ -169,8 +197,9 @@ public class GameController extends EventDispatcher implements IScene {
 	}
 
 	private function onPlayerMove(event:PlayerEvent):void {
-		var color:uint = (event.target as Player).vo.color;
-		var basic:Boolean = MatchState.instance.phase == MatchState.BASIC_PHASE;
+		var player:Player = event.target as Player;
+		var color:uint = player.vo.color;
+		var basic:Boolean = (player.home) ? MatchState.instance.phase == MatchState.BASIC_PHASE : event.basic;
 		var stoneVO:StoneVO = new StoneVO(color, event.x, event.y, event.hidden, basic);
 		if (makeMove(stoneVO)) {
 			if ((event.target as Player).home) {
@@ -188,12 +217,14 @@ public class GameController extends EventDispatcher implements IScene {
 
 	private function estimate():void {
 		_estimator.estimate();
-		trace("length white points : " + _estimator.whitePoints().length);
-		trace("length black points : " + _estimator.blackPoints().length);
+		trace("length white points : " + _estimator.whitePoints.length);
+		trace("length black points : " + _estimator.blackPoints.length);
+		trace("white counts : " + _estimator.whiteCounts);
+		trace("black counts : " + _estimator.blackCounts);
 		trace("[GameController.estimate]");
 		_boardView.cleanTerritory();
-		_boardView.showTerritory(StoneVO.WHITE, _estimator.whitePoints());
-		_boardView.showTerritory(StoneVO.BLACK, _estimator.blackPoints());
+		_boardView.showTerritory(StoneVO.WHITE, _estimator.whitePoints);
+		_boardView.showTerritory(StoneVO.BLACK, _estimator.blackPoints);
 	}
 
 	private function makeMove(stoneVO:StoneVO):Boolean {
@@ -202,10 +233,10 @@ public class GameController extends EventDispatcher implements IScene {
 			if (!stoneVO.hidden || getPlayerByColor(stoneVO.color).vo.userId == UserState.instance.userId) {
 				_boardView.addStone(stoneVO);
 			} else {
-				trace("stone is hidden [GameController.makeMove]");
 			}
 			var deadStones:Vector.<StoneVO> = _gameModel.getDeadStones();
 			if (deadStones.length > 0) {
+				getPlayerByColor((deadStones[0].color == StoneVO.WHITE) ? StoneVO.BLACK : StoneVO.WHITE).addPrisoners(deadStones.length);
 				_gameModel.removeStones(deadStones);
 				if (_gameModel.hiddenStones.length > 0) {
 					_boardView.showHiddenStonesThenRemoveDeads(_gameModel.hiddenStones, deadStones);
@@ -230,9 +261,21 @@ public class GameController extends EventDispatcher implements IScene {
 
 	private function onClick(event:MouseEvent):void {
 		if (event.ctrlKey) {
-			trace("try pass");
-			GameRpc.instance.pass(null, null);
-		//	dispatchEvent(new SceneEvent(SceneEvent.SWITCH_ME, this));
+			if (MatchState.instance.phase == MatchState.MAIN_PHASE) {
+				trace("try pass");
+				GameRpc.instance.pass(null, null);
+			} else if (MatchState.instance.phase == MatchState.END_PHASE) {
+				var win:Boolean = false;
+				if (_whitePlayer.home) {
+					win = (_estimator.whiteCounts + _whitePlayer.numPrisoners) >= (_estimator.blackCounts + _blackPlayer.numPrisoners);
+				} else {
+					win = (_estimator.whiteCounts + _whitePlayer.numPrisoners) < (_estimator.blackCounts + _blackPlayer.numPrisoners);
+				}
+				trace("i win : " + win + " [GameController.onClick]");
+				GameRpc.instance.set_result_opinion(win, null, null);
+				var endWindow:EndGameWindow = WindowManager.instance.getWindow(WindowsENUM.End_WINDOW) as EndGameWindow;
+				endWindow.setResultText(win ? "THIS IS WIN!!" : "THIS IS LOSE!!");
+			}
 		}
 	}
 

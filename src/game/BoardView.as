@@ -33,7 +33,11 @@ public class BoardView extends Sprite {
 	}
 
 	public function clear():void {
-
+		for each (var stone:StoneView in _stones) {
+			if (contains(stone)) { removeChild(stone); }
+		}
+		_stones = null;
+		trace("stones removed [BoardView.clear]");
 	}
 
 	public function addStone(stoneVO:StoneVO):void {

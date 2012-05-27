@@ -4,7 +4,7 @@
 
 -export ([start_link/0]).
 
--export ([get_game_state/1, get_game_list/0, remove_all_games/0, make_move/4, pass/1, click_capture_stone/3, unclick_capture_stone/3]).
+-export ([get_game_state/1, get_game_list/0, remove_all_games/0, make_move/4, pass/1, click_capture_stone/3, unclick_capture_stone/3, set_result_opinion/2]).
 -export ([create_request/2, get_request_list/0, get_request_list_for/1, approve_request/2, decline_request/2]).
 
 %% gen_server callbacks
@@ -40,6 +40,9 @@ click_capture_stone(UserId, X, Y) ->
     gen_server:call(game_room, {click_capture_stone, UserId, X, Y}).
 unclick_capture_stone(UserId, X, Y) ->
     gen_server:call(game_room, {unclick_capture_stone, UserId, X, Y}).
+
+set_result_opinion(UserId, Opinion) ->
+    gen_server:call(game_room, {set_result_opinion, UserId, Opinion}).
 
 get_game_list() ->
     gen_server:call(game_room, get_game_list).
@@ -116,6 +119,22 @@ handle_call({unclick_capture_stone, UserId, X, Y}, _From, State) ->
         {{_, _}, Pid} ->
             Reply = gen_server:call(Pid, {unclick_capture_stone, UserId, X, Y}),
             {reply, Reply, State};
+        _None ->
+            {reply, {error, game_not_found}, State}
+    end;
+
+handle_call({set_result_opinion, UserId, Opinion}, _From, State) ->
+    case find_game(UserId, State#state.games) of
+        FoundedGame = {{_, _}, Pid} ->
+            Reply = gen_server:call(Pid, {set_result_opinion, UserId, Opinion}),
+            NewState = case Reply of
+                {ok, game_finished} ->
+                    gen_server:cast(Pid, stop),
+                    NewGames = [Game || Game <- State#state.games, Game =/= FoundedGame],
+                    State#state{games = NewGames};
+                _Else -> State
+            end,
+            {reply, Reply, NewState};
         _None ->
             {reply, {error, game_not_found}, State}
     end;

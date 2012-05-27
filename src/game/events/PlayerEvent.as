@@ -10,13 +10,15 @@ public class PlayerEvent extends Event {
 	public var x:int;
 	public var y:int;
 	public var hidden:Boolean;
+	public var basic:Boolean;
 
 	public static const MOVE:String = "move";
-	public function PlayerEvent(type:String, x:int, y:int, hidden:Boolean = false) {
+	public function PlayerEvent(type:String, x:int, y:int, hidden:Boolean = false, basic:Boolean = false) {
 		super(type);
 		this.x = x;
 		this.y = y;
 		this.hidden = hidden;
+		this.basic = basic;
 	}
 }
 }

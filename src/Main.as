@@ -7,6 +7,8 @@ import core.window.WindowManager;
 
 import flash.display.Sprite;
 
+import game.iface.window.EndGameWindow;
+
 import game.iface.window.RequestWindow;
 import game.staticModel.MatchState;
 import game.manager.RequestManager;
@@ -51,6 +53,7 @@ import scene.SceneController;
 		private function registerWindows():void {
 			WindowManager.instance.layer = this;
 			WindowManager.instance.registerWindow(WindowsENUM.REQUEST_WINDOW, new RequestWindow());
+			WindowManager.instance.registerWindow(WindowsENUM.End_WINDOW, new EndGameWindow());
 		}
 	}
 }

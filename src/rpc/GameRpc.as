@@ -50,6 +50,10 @@ package rpc {
 			send({request: "unclick_capture_stone", x: x,  y: y}, callback, errCallback);
 		}
 
+		public function set_result_opinion(win:Boolean, callback:Function, errCallback:Function):void {
+			send({request: "set_result_opinion", opinion: win ? "win" : "lose"}, callback, errCallback);
+		}
+
 		public function createRequest(userFor:String, callback:Function, errCallback:Function):void {
 			send({request: "create_request", friend_user_id: userFor}, callback, errCallback);
 		}

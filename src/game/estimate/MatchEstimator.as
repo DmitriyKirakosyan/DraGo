@@ -21,6 +21,8 @@ public class MatchEstimator {
 	private var _matrix:Vector.<Vector.<StoneVO>>;
 	private var _whitePoints:Vector.<Point>;
 	private var _blackPoints:Vector.<Point>;
+	private var _whiteCounts:int;
+	private var _blackCounts:int;
 
 	private var _capturedStonesCollection:Vector.<Vector.<StoneVO>>;
 
@@ -35,8 +37,10 @@ public class MatchEstimator {
 		_capturedStonesCollection = new Vector.<Vector.<StoneVO>>();
 	}
 
-	public function whitePoints():Vector.<Point> { return _whitePoints; }
-	public function blackPoints():Vector.<Point> { return _blackPoints; }
+	public function get whitePoints():Vector.<Point> { return _whitePoints; }
+	public function get blackPoints():Vector.<Point> { return _blackPoints; }
+	public function get whiteCounts():int { return _whiteCounts; }
+	public function get blackCounts():int { return _blackCounts; }
 
 	public function hasCapturedPoint(point:Point):Boolean {
 		var stone:StoneVO = _matrix[point.x][point.y];
@@ -92,6 +96,17 @@ public class MatchEstimator {
 					estimatingPoints = new Vector.<Point>();
 				}
 			}
+		}
+		updatePlayersCounts();
+	}
+	private function updatePlayersCounts():void {
+		_whiteCounts = 0;
+		for each (var whitePoint:Point in _whitePoints) {
+			_whiteCounts += _matrix[whitePoint.x][whitePoint.y] ? 2 : 1;
+		}
+		_blackCounts = 0;
+		for each (var blackPoint:Point in _blackPoints) {
+			_blackCounts += _matrix[blackPoint.x][blackPoint.y] ? 2 : 1;
 		}
 	}
 
