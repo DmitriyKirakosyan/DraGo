@@ -72,6 +72,15 @@ public class GameModel {
 		return findDeadStones();
 	}
 
+	public function isSelfKilled(stoneVO:StoneVO):Boolean {
+		if (_matrix[stoneVO.x][stoneVO.y]) { return false; }
+		var deadStones:Vector.<StoneVO> = new Vector.<StoneVO>();
+		_matrix[stoneVO.x][stoneVO.y] = stoneVO;
+		findDeadStonesWithStone(stoneVO.color, stoneVO, deadStones);
+		_matrix[stoneVO.x][stoneVO.y] = null;
+		return deadStones.length > 0;
+	}
+
 	private function createMatrix():void {
 		_matrix = new Vector.<Vector.<StoneVO>>(GameController.ROWS_NUM, true);
 		for (var i:int = 0; i < GameController.ROWS_NUM; ++i) {

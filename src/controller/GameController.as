@@ -245,7 +245,7 @@ public class GameController extends EventDispatcher implements IScene {
 	}
 
 	private function makeMove(stoneVO:StoneVO):Boolean {
-		if (_gameModel.emptyPoint(stoneVO.x, stoneVO.y)) {
+		if (_gameModel.emptyPoint(stoneVO.x, stoneVO.y) && !_gameModel.isSelfKilled(stoneVO)) {
 			_gameModel.addStone(stoneVO);
 			if (!stoneVO.hidden || getPlayerByColor(stoneVO.color).vo.userId == UserState.instance.userId) {
 				_boardView.addStone(stoneVO);
@@ -264,7 +264,7 @@ public class GameController extends EventDispatcher implements IScene {
 				}
 			}
 		} else {
-			if (_gameModel.getStone(stoneVO.x, stoneVO.y).hidden) {
+			if (_gameModel.getStone(stoneVO.x, stoneVO.y) && _gameModel.getStone(stoneVO.x, stoneVO.y).hidden) {
 				_boardView.justShowHiddenStone(_gameModel.getStone(stoneVO.x, stoneVO.y));
 			}
 			return false;
