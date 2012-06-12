@@ -5,7 +5,6 @@
  */
 package controller {
 import core.enum.WindowsENUM;
-import core.event.WindowEvent;
 import core.window.WindowManager;
 
 import flash.display.Sprite;
@@ -21,8 +20,7 @@ import game.events.BoardViewEvent;
 import game.events.MatchStateClickEvent;
 import game.events.MatchStateEvent;
 import game.iface.window.EndGameWindow;
-import game.staticModel.MatchState;
-import game.staticModel.MatchState;
+import game.iface.window.GameInterface;
 import game.staticModel.MatchState;
 import game.staticModel.UserState;
 import game.stone.StoneVO;
@@ -38,11 +36,10 @@ public class GameController extends EventDispatcher implements IScene {
 	private var _gameContainer:Sprite;
 	private var _boardView:BoardView;
 	private var _gameModel:GameModel;
+	private var _gameInterface:GameInterface;
 
 	private var _whitePlayer:Player;
 	private var _blackPlayer:Player;
-
-	private var _playerToMove:Player;
 
 	private var _estimator:MatchEstimator;
 
@@ -52,6 +49,7 @@ public class GameController extends EventDispatcher implements IScene {
 		_container = container;
 		initObjects();
 		_gameModel = new GameModel();
+		_gameInterface = new GameInterface(container);
 		_estimator =  new MatchEstimator(_gameModel);
 		MatchState.instance.addEventListener(MatchStateEvent.CHANGE_MOVE_PLAYER, onMovePlayerChange);
 		MatchState.instance.addEventListener(MatchStateEvent.PHASE_CHANGED, onMatchPhaseChanged);
@@ -63,22 +61,21 @@ public class GameController extends EventDispatcher implements IScene {
 		if (_whitePlayer) { trace("WARN! player already exists ! [GameController.whitePlayer]"); }
 		_whitePlayer = value;
 		if (_whitePlayer.home) { _whitePlayer.setBoardView(_boardView);
-		}// else {
+		}
 		addPlayerListeners(_whitePlayer);
-		//}
 	}
 	public function set blackPlayer(value:Player):void {
 		if (_blackPlayer) { trace("WARN! player already exists ! [GameController.blackPlayer]"); }
 		_blackPlayer = value;
 		if (_blackPlayer.home) { _blackPlayer.setBoardView(_boardView);
-		}// else {
+		}
 		addPlayerListeners(_blackPlayer);
-		//}
 	}
 
 	public function open():void {
 		_container.addChild(_gameContainer);
 		_gameContainer.addChild(_boardView);
+		_gameInterface.open();
 		addListeners();
 		whitePlayer =  new Player(MatchState.instance.whitePlayer);
 		blackPlayer = new Player(MatchState.instance.blackPlayer);
@@ -86,6 +83,7 @@ public class GameController extends EventDispatcher implements IScene {
 	}
 	public function close():void {
 	 	removeListeners();
+		_gameInterface.close();
 		_container.removeChild(_gameContainer);
 		_whitePlayer.remove();
 		_blackPlayer.remove();
@@ -99,14 +97,12 @@ public class GameController extends EventDispatcher implements IScene {
 	}
 	private function endGame():void {
 		trace("end game");
-		//playerToMove(null);
 		estimate();
 		MatchState.instance.addEventListener(MatchStateClickEvent.CLICK, onNewClick);
 		MatchState.instance.addEventListener(MatchStateClickEvent.UNCLICK, onNewUnClick);
 	}
 
 	private function onMovePlayerChange(event:MatchStateEvent):void {
-		//playerToMove(MatchState.instance.movePlayer == MatchState.instance.whitePlayer.userId ? _whitePlayer : _blackPlayer);
 	}
 
 	private function onStartMainPhase(event:MatchStateEvent):void {
@@ -123,7 +119,6 @@ public class GameController extends EventDispatcher implements IScene {
 
 	private function onMatchPhaseChanged(event:MatchStateEvent):void {
 		if (MatchState.instance.phase == MatchState.MAIN_PHASE) {
-			//playerToMove(MatchState.instance.movePlayer == MatchState.instance.whitePlayer.userId ? _whitePlayer : _blackPlayer);
 		} else if (MatchState.instance.phase == MatchState.END_PHASE) {
 			endGame();
 		}
@@ -155,17 +150,6 @@ public class GameController extends EventDispatcher implements IScene {
 		}
 	}
 
-//	private function playerToMove(playerToMove:Player):void {
-//		trace("change player to move : " + playerToMove + " [GameController.playerToMove]");
-//		if (_playerToMove && _playerToMove.home) {
-//			removePlayerListeners(_playerToMove);
-//		}
-//		_playerToMove = playerToMove;
-//		if (_playerToMove && _playerToMove.home) {
-//			addPlayerListeners(playerToMove);
-//		}
-//	}
-
 	private function addPlayerListeners(player:Player):void {
 		player.addEventListener(PlayerEvent.MOVE, onPlayerMove);
 	}
@@ -180,11 +164,11 @@ public class GameController extends EventDispatcher implements IScene {
 		_gameContainer.graphics.endFill();
 		_boardView = new BoardView();
 		_boardView.addEventListener(BoardViewEvent.CLICK, onBoardViewClick);
-		//_boardView.x = 20;
-		//_boardView.y = 20;
+		_boardView.y = 20;
 	}
 
 	private function onBoardViewClick(event:BoardViewEvent):void {
+		if (!_gameModel.isValidPoint(event.cellX, event.cellY)) { return; }
 		if (!_gameModel.emptyPoint(event.cellX, event.cellY) &&
 				MatchState.instance.phase == MatchState.END_PHASE) {
 			var point:Point = new Point(event.cellX, event.cellY);
@@ -221,6 +205,9 @@ public class GameController extends EventDispatcher implements IScene {
 		if (player.home && (!(_whitePlayer.home && _blackPlayer.home) && !accessToMove(player))) {
 			return;
 		}
+
+		//check for valid point
+		if (!_gameModel.isValidPoint(event.x, event.y)) { return; }
 
 		var color:uint = player.vo ? player.vo.color : 0;
 		var basic:Boolean = (player.home) ? MatchState.instance.phase == MatchState.BASIC_PHASE : event.basic;

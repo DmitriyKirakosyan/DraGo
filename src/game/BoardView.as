@@ -27,6 +27,7 @@ public class BoardView extends Sprite {
 
 	private var _stones:Vector.<StoneView>;
 	private var _territoryStones:Vector.<StoneView>;
+	private var _stoneSelector:Sprite;
 
 	public function BoardView() {
 		super();
@@ -43,6 +44,9 @@ public class BoardView extends Sprite {
 
 	public function addStone(stoneVO:StoneVO):void {
 		var stoneView = createStone(stoneVO);
+		if (!stoneVO.basic) {
+			stoneView.addChild(_stoneSelector);
+		}
 		if (!_stones) { _stones = new Vector.<StoneView>(); }
 		_stones.push(stoneView);
 		addChild(stoneView);
@@ -134,10 +138,15 @@ public class BoardView extends Sprite {
 
 	private function init():void {
 		addChild(new Main.BOARD_VIEW());
-		//drawBackground();
-		//drawLines();
-		//drawBoarder();
+		createStoneSelector();
 		addListeners();
+	}
+
+	private function createStoneSelector():void {
+		_stoneSelector = new Sprite();
+		_stoneSelector.graphics.beginFill(0x8B2323);
+		_stoneSelector.graphics.drawCircle(0, 0, 6);
+		_stoneSelector.graphics.endFill();
 	}
 
 	private function addListeners():void {

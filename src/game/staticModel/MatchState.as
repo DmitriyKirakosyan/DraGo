@@ -77,6 +77,15 @@ public class MatchState extends EventDispatcher{
 		return _blackPlayer;
 	}
 
+	public function getMovePlayerColor():uint {
+		if (_movePlayer == _whitePlayer.userId) {
+			return _whitePlayer.color;
+		}
+		return _blackPlayer.color;
+	}
+
+	// Internal functions
+
 	private function onStateUpdate(event:Event):void {
 		if (UserState.instance.game) {
 			var game:Object = UserState.instance.game;

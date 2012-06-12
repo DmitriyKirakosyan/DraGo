@@ -42,7 +42,7 @@ public class GameModel {
 	}
 
 	public function getStone(x:int, y:int):StoneVO {
-		if (validPoint(x, y)) {
+		if (isValidPoint(x, y)) {
 			return _matrix[x][y];
 		}
 		return null;
@@ -81,6 +81,12 @@ public class GameModel {
 		return deadStones.length > 0;
 	}
 
+	public function isValidPoint(x:int, y:int):Boolean {
+		return x >=0 && x < GameController.ROWS_NUM && y >= 0 && y < GameController.ROWS_NUM;
+	}
+
+	// Internal functions
+
 	private function createMatrix():void {
 		_matrix = new Vector.<Vector.<StoneVO>>(GameController.ROWS_NUM, true);
 		for (var i:int = 0; i < GameController.ROWS_NUM; ++i) {
@@ -99,7 +105,7 @@ public class GameModel {
 		for (var i:int = 0; i < 4; ++i) {
 			loopX = x + ((i + 1) % 2) * (-1 + i);
 			loopY = y + (i % 2) * (-2 + i);
-			if (validPoint(loopX, loopY) && _matrix[loopX][loopY] && _matrix[loopX][loopY].color != _lastStoneVO.color) {
+			if (isValidPoint(loopX, loopY) && _matrix[loopX][loopY] && _matrix[loopX][loopY].color != _lastStoneVO.color) {
 				findDeadStonesWithStone(_matrix[loopX][loopY].color, _matrix[loopX][loopY], deadStones);
 				if (deadStones && deadStones.length > 0) {
 					result = result.concat(deadStones);
@@ -121,16 +127,16 @@ public class GameModel {
 			wasStones.push(stoneVO);
 
 			deadStones.push(stoneVO);
-			if (validPoint(stoneVO.x-1, stoneVO.y)) {
+			if (isValidPoint(stoneVO.x-1, stoneVO.y)) {
 				finished = findDeadStonesWithStone(color, _matrix[stoneVO.x-1][stoneVO.y], deadStones, wasStones, finished);
 			}
-			if (validPoint(stoneVO.x, stoneVO.y-1)) {
+			if (isValidPoint(stoneVO.x, stoneVO.y-1)) {
 				finished = findDeadStonesWithStone(color, _matrix[stoneVO.x][stoneVO.y-1], deadStones, wasStones, finished);
 			}
-			if (validPoint(stoneVO.x+1, stoneVO.y)) {
+			if (isValidPoint(stoneVO.x+1, stoneVO.y)) {
 				finished = findDeadStonesWithStone(color, _matrix[stoneVO.x+1][stoneVO.y], deadStones, wasStones, finished);
 			}
-			if (validPoint(stoneVO.x, stoneVO.y+1)) {
+			if (isValidPoint(stoneVO.x, stoneVO.y+1)) {
 				finished = findDeadStonesWithStone(color, _matrix[stoneVO.x][stoneVO.y+1], deadStones, wasStones, finished);
 			}
 		} else if (stoneVO.color != color && stoneVO.hidden) {
@@ -139,8 +145,5 @@ public class GameModel {
 		return finished;
 	}
 
-	private function validPoint(x:int, y:int):Boolean {
-		return x >=0 && x < GameController.ROWS_NUM && y >= 0 && y < GameController.ROWS_NUM;
-	}
 }
 }
