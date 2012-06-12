@@ -26,6 +26,11 @@ import scene.SceneController;
 		public static const WIDTH:Number = 600;
 		public static const HEIGHT:Number = 480;
 
+		[Embed (source="../imgs/board.png" )] public static const BOARD_VIEW:Class;
+		[Embed (source="../imgs/white_stone.png" )] public static const WHITE_STONE_VIEW:Class;
+		[Embed (source="../imgs/black_stone.png" )] public static const BLACK_STONE_VIEW:Class;
+		[Embed (source="../imgs/white_base_stone.png" )] public static const WHITE_BASIC_STONE_VIEW:Class;
+		[Embed (source="../imgs/black_base_stone.png" )] public static const BLACK_BASIC_STONE_VIEW:Class;
 		private var _sceneController:SceneController;
 		
 		public function Main() {

@@ -21,9 +21,9 @@ import org.osmf.layout.PaddingLayoutMetadata;
 import org.osmf.metadata.TimelineMarker;
 
 public class BoardView extends Sprite {
-	public static const CELL_WIDTH:Number = 40;
-	public static const CELL_HEIGHT:Number = 40;
-	public static const BORDER_WIDTH:Number = 20;
+	public static const CELL_WIDTH:Number = 36;
+	public static const CELL_HEIGHT:Number = 36;
+	public static const BORDER_WIDTH:Number = 52;
 
 	private var _stones:Vector.<StoneView>;
 	private var _territoryStones:Vector.<StoneView>;
@@ -133,9 +133,10 @@ public class BoardView extends Sprite {
 	}
 
 	private function init():void {
-		drawBackground();
-		drawLines();
-		drawBoarder();
+		addChild(new Main.BOARD_VIEW());
+		//drawBackground();
+		//drawLines();
+		//drawBoarder();
 		addListeners();
 	}
 

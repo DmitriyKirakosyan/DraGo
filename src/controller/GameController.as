@@ -175,13 +175,13 @@ public class GameController extends EventDispatcher implements IScene {
 
 	private function initObjects():void {
 		_gameContainer = new Sprite();
-		_gameContainer.graphics.beginFill(0xffffff);
+		_gameContainer.graphics.beginFill(0xCDC5BF);
 		_gameContainer.graphics.drawRect(0, 0, Main.WIDTH, Main.HEIGHT);
 		_gameContainer.graphics.endFill();
 		_boardView = new BoardView();
 		_boardView.addEventListener(BoardViewEvent.CLICK, onBoardViewClick);
-		_boardView.x = 20;
-		_boardView.y = 20;
+		//_boardView.x = 20;
+		//_boardView.y = 20;
 	}
 
 	private function onBoardViewClick(event:BoardViewEvent):void {
@@ -218,11 +218,11 @@ public class GameController extends EventDispatcher implements IScene {
 		var player:Player = event.target as Player;
 
 		//check for access to move
-		if (player.home && !accessToMove(player)) {
+		if (player.home && (!(_whitePlayer.home && _blackPlayer.home) && !accessToMove(player))) {
 			return;
 		}
 
-		var color:uint = player.vo.color;
+		var color:uint = player.vo ? player.vo.color : 0;
 		var basic:Boolean = (player.home) ? MatchState.instance.phase == MatchState.BASIC_PHASE : event.basic;
 		var stoneVO:StoneVO = new StoneVO(color, event.x, event.y, event.hidden, basic);
 		if (makeMove(stoneVO)) {
