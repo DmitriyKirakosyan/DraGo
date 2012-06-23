@@ -8,6 +8,7 @@ import core.enum.WindowsENUM;
 import core.window.WindowManager;
 
 import flash.display.Sprite;
+import flash.events.Event;
 import flash.events.EventDispatcher;
 import flash.events.MouseEvent;
 import flash.geom.Point;
@@ -21,6 +22,7 @@ import game.events.MatchStateClickEvent;
 import game.events.MatchStateEvent;
 import game.iface.window.EndGameWindow;
 import game.iface.window.GameInterface;
+import game.iface.window.panel.GameButtonEvent;
 import game.staticModel.MatchState;
 import game.staticModel.UserState;
 import game.stone.StoneVO;
@@ -49,7 +51,6 @@ public class GameController extends EventDispatcher implements IScene {
 		_container = container;
 		initObjects();
 		_gameModel = new GameModel();
-		_gameInterface = new GameInterface(container);
 		_estimator =  new MatchEstimator(_gameModel);
 		MatchState.instance.addEventListener(MatchStateEvent.CHANGE_MOVE_PLAYER, onMovePlayerChange);
 		MatchState.instance.addEventListener(MatchStateEvent.PHASE_CHANGED, onMatchPhaseChanged);
@@ -76,13 +77,11 @@ public class GameController extends EventDispatcher implements IScene {
 		_container.addChild(_gameContainer);
 		_gameContainer.addChild(_boardView);
 		_gameInterface.open();
-		addListeners();
 		whitePlayer =  new Player(MatchState.instance.whitePlayer);
 		blackPlayer = new Player(MatchState.instance.blackPlayer);
 		startGame();
 	}
 	public function close():void {
-	 	removeListeners();
 		_gameInterface.close();
 		_container.removeChild(_gameContainer);
 		_whitePlayer.remove();
@@ -165,6 +164,15 @@ public class GameController extends EventDispatcher implements IScene {
 		_boardView = new BoardView();
 		_boardView.addEventListener(BoardViewEvent.CLICK, onBoardViewClick);
 		_boardView.y = 20;
+		initInterface();
+	}
+
+	private function initInterface():void {
+		_gameInterface = new GameInterface(_container);
+		_gameInterface.addEventListener(GameButtonEvent.PASS, onPass);
+		_gameInterface.addEventListener(GameButtonEvent.RESIGN, onResign);
+		_gameInterface.addEventListener(GameButtonEvent.FINISH_GAME, onFinishGame);
+		_gameInterface.addEventListener(GameButtonEvent.SHOW_HIDDEN, onShowHidden);
 	}
 
 	private function onBoardViewClick(event:BoardViewEvent):void {
@@ -195,6 +203,7 @@ public class GameController extends EventDispatcher implements IScene {
 		if (MatchState.instance.phase == MatchState.BASIC_PHASE && _gameModel.getNumStones() == MatchState.NUM_BASIC_STONES) {
 			return false;
 		}
+		if (MatchState.instance.phase == MatchState.END_PHASE) { return false; }
 		return true;
 	}
 
@@ -259,31 +268,31 @@ public class GameController extends EventDispatcher implements IScene {
 		return true;
 	}
 
-	private function addListeners():void {
-		_gameContainer.addEventListener(MouseEvent.CLICK, onClick);
+	private function onPass(event:Event):void {
+		if (MatchState.instance.phase == MatchState.MAIN_PHASE) {
+			GameRpc.instance.pass(null, null);
+		}
 	}
-	private function removeListeners():void {
-		_gameContainer.removeEventListener(MouseEvent.CLICK, onClick);
+	private function onResign(event:Event):void {
+
+	}
+	private function onFinishGame(event:Event):void {
+		if (MatchState.instance.phase == MatchState.END_PHASE) {
+			var win:Boolean = false;
+			if (_whitePlayer.home) {
+				win = (_estimator.whiteCounts + _whitePlayer.numPrisoners) >= (_estimator.blackCounts + _blackPlayer.numPrisoners);
+			} else {
+				win = (_estimator.whiteCounts + _whitePlayer.numPrisoners) < (_estimator.blackCounts + _blackPlayer.numPrisoners);
+			}
+			trace("i win : " + win + " [GameController.onClick]");
+			GameRpc.instance.set_result_opinion(win, null, null);
+			var endWindow:EndGameWindow = WindowManager.instance.getWindow(WindowsENUM.End_WINDOW) as EndGameWindow;
+			endWindow.setResultText(win ? "THIS IS WIN!!" : "THIS IS LOSE!!");
+		}
 	}
 
-	private function onClick(event:MouseEvent):void {
-		if (event.ctrlKey) {
-			if (MatchState.instance.phase == MatchState.MAIN_PHASE) {
-				trace("try pass");
-				GameRpc.instance.pass(null, null);
-			} else if (MatchState.instance.phase == MatchState.END_PHASE) {
-				var win:Boolean = false;
-				if (_whitePlayer.home) {
-					win = (_estimator.whiteCounts + _whitePlayer.numPrisoners) >= (_estimator.blackCounts + _blackPlayer.numPrisoners);
-				} else {
-					win = (_estimator.whiteCounts + _whitePlayer.numPrisoners) < (_estimator.blackCounts + _blackPlayer.numPrisoners);
-				}
-				trace("i win : " + win + " [GameController.onClick]");
-				GameRpc.instance.set_result_opinion(win, null, null);
-				var endWindow:EndGameWindow = WindowManager.instance.getWindow(WindowsENUM.End_WINDOW) as EndGameWindow;
-				endWindow.setResultText(win ? "THIS IS WIN!!" : "THIS IS LOSE!!");
-			}
-		}
+	private function onShowHidden(event:Event):void {
+
 	}
 
 	private function getPlayerByColor(color:uint):Player {

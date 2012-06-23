@@ -9,6 +9,8 @@ package game.iface.window {
 import flash.display.Sprite;
 
 import game.events.MatchStateEvent;
+import game.iface.window.panel.GameButtonEvent;
+import game.iface.window.panel.GameButtonsPanel;
 
 import game.iface.window.panel.GamePlayersPanel;
 import game.staticModel.MatchState;
@@ -17,6 +19,7 @@ import game.stone.StoneVO;
 public class GameInterface extends Sprite {
 	private var _container:Sprite;
 	private var _playersPanel:GamePlayersPanel;
+	private var _gameBtnsPanel:GameButtonsPanel;
 
 	public function GameInterface(container:Sprite) {
 		super();
@@ -27,18 +30,28 @@ public class GameInterface extends Sprite {
 
 	public function open():void {
 		_container.addChild(_playersPanel);
+		_container.addChild(_gameBtnsPanel);
 	}
 
 	public function close():void {
 		if (_container.contains(_playersPanel)) {
 			_container.removeChild(_playersPanel);
 		}
+		_container.removeChild(_gameBtnsPanel);
 	}
 
 	private function init():void {
 		_playersPanel = new GamePlayersPanel();
 		_playersPanel.x = 31;
 		_playersPanel.y = 3;
+
+		_gameBtnsPanel = new GameButtonsPanel();
+		_gameBtnsPanel.x = 470;
+		_gameBtnsPanel.y = 40;
+		_gameBtnsPanel.addEventListener(GameButtonEvent.FINISH_GAME, dispatchEvent);
+		_gameBtnsPanel.addEventListener(GameButtonEvent.PASS, dispatchEvent);
+		_gameBtnsPanel.addEventListener(GameButtonEvent.RESIGN, dispatchEvent);
+		_gameBtnsPanel.addEventListener(GameButtonEvent.SHOW_HIDDEN, dispatchEvent);
 	}
 
 	private function onPhaseChanged(event:MatchStateEvent):void {
