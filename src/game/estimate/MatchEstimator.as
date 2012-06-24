@@ -20,8 +20,12 @@ public class MatchEstimator {
 	private var _matrix:Vector.<Vector.<StoneVO>>;
 	private var _whitePoints:Vector.<Point>;
 	private var _blackPoints:Vector.<Point>;
-	private var _whiteCounts:int;
-	private var _blackCounts:int;
+	private var _whiteTerritoryCounts:int;
+	private var _blackTerritoryCounts:int;
+
+	//очки, зарабатываемые во время игры (пленники, определенные точки доски и тп
+	private var _whiteBaseCounts:int;
+	private var _blackBaseCounts:int;
 
 	private var _capturedStonesCollection:Vector.<Vector.<StoneVO>>;
 
@@ -31,15 +35,31 @@ public class MatchEstimator {
 
 	public function MatchEstimator(gameModel:GameModel):void {
 		super();
+		_whiteTerritoryCounts = 0;
+		_blackTerritoryCounts = 0;
+		_whiteBaseCounts = 0;
+		_blackBaseCounts = 0;
 		_gameModel = gameModel;
 		_matrix = _gameModel.matrix;
 		_capturedStonesCollection = new Vector.<Vector.<StoneVO>>();
 	}
 
+	public function clean():void {
+		_whiteBaseCounts = 0;
+		_blackBaseCounts = 0;
+	}
+
+	public function addWhiteCounts(value:int):void {
+		_whiteBaseCounts += value;
+	}
+	public function addBlackCounts(value:int):void {
+		_blackBaseCounts += value;
+	}
+
 	public function get whitePoints():Vector.<Point> { return _whitePoints; }
 	public function get blackPoints():Vector.<Point> { return _blackPoints; }
-	public function get whiteCounts():int { return _whiteCounts; }
-	public function get blackCounts():int { return _blackCounts; }
+	public function get whiteCounts():int { return _whiteTerritoryCounts + _whiteBaseCounts; }
+	public function get blackCounts():int { return _blackTerritoryCounts + _blackBaseCounts; }
 
 	public function hasCapturedPoint(point:Point):Boolean {
 		var stone:StoneVO = _matrix[point.x][point.y];
@@ -117,13 +137,13 @@ public class MatchEstimator {
 
 
 	private function updatePlayersCounts():void {
-		_whiteCounts = 0;
+		_whiteTerritoryCounts = 0;
 		for each (var whitePoint:Point in _whitePoints) {
-			_whiteCounts += _matrix[whitePoint.x][whitePoint.y] ? 2 : 1;
+			_whiteTerritoryCounts += _matrix[whitePoint.x][whitePoint.y] ? 2 : 1;
 		}
-		_blackCounts = 0;
+		_blackTerritoryCounts = 0;
 		for each (var blackPoint:Point in _blackPoints) {
-			_blackCounts += _matrix[blackPoint.x][blackPoint.y] ? 2 : 1;
+			_blackTerritoryCounts += _matrix[blackPoint.x][blackPoint.y] ? 2 : 1;
 		}
 	}
 

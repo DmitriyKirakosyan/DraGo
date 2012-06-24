@@ -226,7 +226,6 @@ public class GameController extends EventDispatcher implements IScene {
 		}
 
 		if (makeMove(event.stone) && player.home) {
-			player.played = player.home ? true : false;
 			GameRpc.instance.makeMove(event.stone.x, event.stone.y, event.stone.hidden, null, null);
 		}
 	}
@@ -276,7 +275,11 @@ public class GameController extends EventDispatcher implements IScene {
 	private function checkDeadStones():void {
 		var deadStones:Vector.<StoneVO> = _gameModel.getDeadStones();
 		if (deadStones.length > 0) {
-			getPlayerByColor((deadStones[0].color == StoneVO.WHITE) ? StoneVO.BLACK : StoneVO.WHITE).addPrisoners(deadStones.length);
+
+			(deadStones[0].color == StoneVO.WHITE) ?
+				_estimator.addBlackCounts(deadStones.length) :
+				_estimator.addWhiteCounts(deadStones.length);
+
 			_gameModel.removeStones(deadStones);
 			if (_gameModel.hiddenStones.length > 0) {
 				_boardView.showHiddenStonesThenRemoveDeads(_gameModel.hiddenStones, deadStones);
@@ -289,7 +292,6 @@ public class GameController extends EventDispatcher implements IScene {
 
 	private function onPass(event:Event):void {
 		if (MatchState.instance.phase == MatchState.MAIN_PHASE) {
-			homePlayer.played = true;
 			_gameModel.addPass(new StoneVO(homePlayer.vo.color, -1, -1, false, false, -1, true));
 			_boardView.setPassMove();
 			GameRpc.instance.pass(null, null);
@@ -300,12 +302,10 @@ public class GameController extends EventDispatcher implements IScene {
 	}
 	private function onFinishGame(event:Event):void {
 		if (MatchState.instance.phase == MatchState.END_PHASE) {
-			var win:Boolean = false;
-			if (_whitePlayer.home) {
-				win = (_estimator.whiteCounts + _whitePlayer.numPrisoners) >= (_estimator.blackCounts + _blackPlayer.numPrisoners);
-			} else {
-				win = (_estimator.whiteCounts + _whitePlayer.numPrisoners) < (_estimator.blackCounts + _blackPlayer.numPrisoners);
-			}
+			var win:Boolean = (_whitePlayer.home) ?
+				(_estimator.whiteCounts) >= (_estimator.blackCounts) :
+				(_estimator.whiteCounts) < (_estimator.blackCounts);
+
 			trace("i win : " + win + " [GameController.onClick]");
 			GameRpc.instance.set_result_opinion(win, null, null);
 			var endWindow:EndGameWindow = WindowManager.instance.getWindow(WindowsENUM.End_WINDOW) as EndGameWindow;

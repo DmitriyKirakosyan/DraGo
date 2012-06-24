@@ -22,29 +22,14 @@ public class Player extends EventDispatcher {
 	private var _vo:PlayerVO;
 	private var _home:Boolean;
 	private var _numHiddenStones:int;
-	private var _numPrisoners:int;
-
-	private var _played:Boolean;
 
 	public function Player(vo:PlayerVO) {
 		super();
-		_played = false;
-		_vo = vo;
+		_vo = vo ? vo : new PlayerVO("", 0);
 		_home = !vo || vo.userId == UserState.instance.userId;
 		_numHiddenStones = 1;
-		_numPrisoners = 0;
 		addListeners();
 	}
-
-	public function set played(value:Boolean):void {
-		_played = value;
-	}
-	public function get played():Boolean { return _played; }
-
-	public function addPrisoners(num:int):void {
-		_numPrisoners += num;
-	}
-	public function get numPrisoners():int { return _numPrisoners; }
 
 	public function remove():void {
 		if (_boardView) {
