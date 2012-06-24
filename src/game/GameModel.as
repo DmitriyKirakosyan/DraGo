@@ -11,6 +11,10 @@ import game.stone.StoneVO;
 public class GameModel {
 	private var _matrix:Vector.<Vector.<StoneVO>>;
 	private var _lastStoneVO:StoneVO;
+
+	/**
+	 * Для алгоритма поиска мертвых комней
+	 */
 	private var _hiddenStones:Vector.<StoneVO>;
 
 	public function GameModel() {
@@ -24,6 +28,10 @@ public class GameModel {
 	public function cleanHiddenStones():void {
 		_hiddenStones = new Vector.<StoneVO>();
 	}
+
+	/**
+	 * Найденные в ходе алгоритма окружения скрытые камни
+	 */
 	public function get hiddenStones():Vector.<StoneVO> { return _hiddenStones; }
 	public function get matrix():Vector.<Vector.<StoneVO>> { return _matrix; }
 
@@ -39,6 +47,10 @@ public class GameModel {
 			}
 		}
 		return result;
+	}
+
+	public function addPass(stoneVO:StoneVO):void {
+		_lastStoneVO = stoneVO;
 	}
 
 	public function getStone(x:int, y:int):StoneVO {

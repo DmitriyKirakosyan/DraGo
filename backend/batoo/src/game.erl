@@ -42,7 +42,8 @@ handle_call({get_game_state, UserId}, _From, State) ->
     EncodedStones = lists:map(
         fun(Stone) -> [{color, Stone#stone.color}, {x, Stone#stone.x},
                         {y, Stone#stone.y}, {hidden, Stone#stone.hidden},
-                        {basic, Stone#stone.basic}, {number, Stone#stone.number}]
+                        {basic, Stone#stone.basic}, {number, Stone#stone.number},
+                        {pass, Stone#stone.pass}]
         end
     , Stones),
     Clicks = lists:map( fun({X, Y}) -> [{x, X}, {y, Y}] end, State#game.clicks),
@@ -88,17 +89,17 @@ handle_call({make_move, UserId, X, Y, Hidden}, _From, State = #game{move_player=
     NewState = State#game{move_player=MovePlayer, stones=[#stone{color=StoneColor, x=X, y=Y, hidden=Hidden, number=NewStoneNumber} | State#game.stones]},
     {reply, {ok, move_saved}, NewState};
 
+handle_call({pass, UserId}, _From, State = #game{move_player=UserId, phase = ?MAIN_PHASE, stones = [#stone{pass = true} | _OtherStones]}) ->
+    {reply, {ok, game_stopped}, State#game{phase=?END_PHASE}};
+
 handle_call({pass, UserId}, _From, State = #game{move_player=UserId, phase = ?MAIN_PHASE}) ->
     {StoneColor, MovePlayer} = if UserId =:= State#game.white_user_id -> {white, State#game.black_user_id};
                                     true -> {black, State#game.white_user_id} end,
-    StonesLength = lists:flatlength(State#game.stones),
-    {Reply, NewState} = case State#game.stones of
-        [Stone | _] when Stone#stone.color =:= StoneColor andalso StonesLength > 6 ->
-            {{ok, game_stopped}, State#game{phase=?END_PHASE}};
-        _Else ->
-            {{ok, pass_saved}, State#game{move_player=MovePlayer}}
-    end,
-    {reply, Reply, NewState};
+
+    Stones = State#game.stones,
+    NewStoneNumber = get_new_stone_number(State#game.stones),
+    PassStone = #stone{color=StoneColor, number = NewStoneNumber, pass = true},
+    {reply, {ok, pass_saved}, State#game{move_player=MovePlayer, stones = [PassStone | Stones]}};
 
 %% end phase %%
 

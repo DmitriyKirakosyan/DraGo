@@ -26,7 +26,7 @@ import game.iface.window.panel.GameButtonEvent;
 import game.staticModel.MatchState;
 import game.staticModel.UserState;
 import game.stone.StoneVO;
-import game.events.PlayerEvent;
+import game.events.PlayerMoveEvent;
 
 import rpc.GameRpc;
 
@@ -52,7 +52,6 @@ public class GameController extends EventDispatcher implements IScene {
 		initObjects();
 		_gameModel = new GameModel();
 		_estimator =  new MatchEstimator(_gameModel);
-		MatchState.instance.addEventListener(MatchStateEvent.CHANGE_MOVE_PLAYER, onMovePlayerChange);
 		MatchState.instance.addEventListener(MatchStateEvent.PHASE_CHANGED, onMatchPhaseChanged);
 		MatchState.instance.addEventListener(MatchStateEvent.BASIC_PHASE_CHANGED_ON_MAIN_PHASE, onStartMainPhase);
 		MatchState.instance.addEventListener(MatchStateEvent.GAME_STOPPED, onGameStopped);
@@ -101,9 +100,6 @@ public class GameController extends EventDispatcher implements IScene {
 		MatchState.instance.addEventListener(MatchStateClickEvent.UNCLICK, onNewUnClick);
 	}
 
-	private function onMovePlayerChange(event:MatchStateEvent):void {
-	}
-
 	private function onStartMainPhase(event:MatchStateEvent):void {
 		_boardView.clear();
 		_gameModel.removeAllStones();
@@ -150,10 +146,10 @@ public class GameController extends EventDispatcher implements IScene {
 	}
 
 	private function addPlayerListeners(player:Player):void {
-		player.addEventListener(PlayerEvent.MOVE, onPlayerMove);
+		player.addEventListener(PlayerMoveEvent.MOVE, onPlayerMove);
 	}
 	private function removePlayerListeners(player:Player):void {
-		player.removeEventListener(PlayerEvent.MOVE, onPlayerMove);
+		player.removeEventListener(PlayerMoveEvent.MOVE, onPlayerMove);
 	}
 
 	private function initObjects():void {
@@ -177,18 +173,20 @@ public class GameController extends EventDispatcher implements IScene {
 
 	private function onBoardViewClick(event:BoardViewEvent):void {
 		if (!_gameModel.isValidPoint(event.cellX, event.cellY)) { return; }
-		if (!_gameModel.emptyPoint(event.cellX, event.cellY) &&
-				MatchState.instance.phase == MatchState.END_PHASE) {
-			var point:Point = new Point(event.cellX, event.cellY);
-			if (_estimator.hasCapturedPoint(point)) {
-				_estimator.removeCapturedStone(point);
-				GameRpc.instance.unclick_capture_stone(point.x, point.y, null, null);
-			} else {
-				_estimator.addCapturedStone(point);
-				GameRpc.instance.click_capture_stone(point.x, point.y, null, null);
-			}
-			estimate();
+		if (_gameModel.emptyPoint(event.cellX, event.cellY) ||
+				MatchState.instance.phase != MatchState.END_PHASE) {
+			return;
 		}
+
+		var point:Point = new Point(event.cellX, event.cellY);
+		if (_estimator.hasCapturedPoint(point)) {
+			_estimator.removeCapturedStone(point);
+			GameRpc.instance.unclick_capture_stone(point.x, point.y, null, null);
+		} else {
+			_estimator.addCapturedStone(point);
+			GameRpc.instance.click_capture_stone(point.x, point.y, null, null);
+		}
+		estimate();
 	}
 
 	private function accessToMove(homePlayer:Player):Boolean {
@@ -197,7 +195,7 @@ public class GameController extends EventDispatcher implements IScene {
 				return false;
 			}
 		} else if (MatchState.instance.phase == MatchState.MAIN_PHASE &&
-								 _gameModel.lastStoneVO.color == homePlayer.vo.color) {
+								_gameModel.lastStoneVO.color == homePlayer.vo.color) {
 			return false;
 		}
 		if (MatchState.instance.phase == MatchState.BASIC_PHASE && _gameModel.getNumStones() == MatchState.NUM_BASIC_STONES) {
@@ -207,7 +205,7 @@ public class GameController extends EventDispatcher implements IScene {
 		return true;
 	}
 
-	private function onPlayerMove(event:PlayerEvent):void {
+	private function onPlayerMove(event:PlayerMoveEvent):void {
 		var player:Player = event.target as Player;
 
 		//check for access to move
@@ -216,15 +214,15 @@ public class GameController extends EventDispatcher implements IScene {
 		}
 
 		//check for valid point
-		if (!_gameModel.isValidPoint(event.x, event.y)) { return; }
+		if (!_gameModel.isValidPoint(event.stone.x, event.stone.y) && !event.stone.pass) { return; }
 
-		var color:uint = player.vo ? player.vo.color : 0;
-		var basic:Boolean = (player.home) ? MatchState.instance.phase == MatchState.BASIC_PHASE : event.basic;
-		var stoneVO:StoneVO = new StoneVO(color, event.x, event.y, event.hidden, basic);
-		if (makeMove(stoneVO)) {
-			if ((event.target as Player).home) {
-				GameRpc.instance.makeMove(stoneVO.x, stoneVO.y, stoneVO.hidden, null, null);
-			}
+		if (player.home) {
+			event.stone.basic = MatchState.instance.phase == MatchState.BASIC_PHASE;
+		}
+
+		if (makeMove(event.stone) && player.home) {
+			player.played = player.home ? true : false;
+			GameRpc.instance.makeMove(event.stone.x, event.stone.y, event.stone.hidden, null, null);
 		}
 	}
 
@@ -241,24 +239,17 @@ public class GameController extends EventDispatcher implements IScene {
 	}
 
 	private function makeMove(stoneVO:StoneVO):Boolean {
+		//check for pass
+		if (stoneVO.pass) {
+			_gameModel.addPass(stoneVO);
+			return true;
+		}
+
+		//addNormalStone
 		if (_gameModel.emptyPoint(stoneVO.x, stoneVO.y) && !_gameModel.isSelfKilled(stoneVO)) {
 			_gameModel.addStone(stoneVO);
-			if (!stoneVO.hidden || getPlayerByColor(stoneVO.color).vo.userId == UserState.instance.userId) {
-				_boardView.addStone(stoneVO);
-			} else {
-				_boardView.showEnemyHiddenStoneEffect();
-			}
-			var deadStones:Vector.<StoneVO> = _gameModel.getDeadStones();
-			if (deadStones.length > 0) {
-				getPlayerByColor((deadStones[0].color == StoneVO.WHITE) ? StoneVO.BLACK : StoneVO.WHITE).addPrisoners(deadStones.length);
-				_gameModel.removeStones(deadStones);
-				if (_gameModel.hiddenStones.length > 0) {
-					_boardView.showHiddenStonesThenRemoveDeads(_gameModel.hiddenStones, deadStones);
-					_gameModel.cleanHiddenStones();
-				} else {
-					_boardView.removeStones(deadStones);
-				}
-			}
+			placeStoneOnBoard(stoneVO);
+			checkDeadStones();
 		} else {
 			if (_gameModel.getStone(stoneVO.x, stoneVO.y) && _gameModel.getStone(stoneVO.x, stoneVO.y).hidden) {
 				_boardView.justShowHiddenStone(_gameModel.getStone(stoneVO.x, stoneVO.y));
@@ -268,8 +259,32 @@ public class GameController extends EventDispatcher implements IScene {
 		return true;
 	}
 
+	private function placeStoneOnBoard(stoneVO:StoneVO):void {
+		if (!stoneVO.hidden || getPlayerByColor(stoneVO.color).vo.userId == UserState.instance.userId) {
+			_boardView.addStone(stoneVO);
+		} else {
+			_boardView.showEnemyHiddenStoneEffect();
+		}
+	}
+
+	private function checkDeadStones():void {
+		var deadStones:Vector.<StoneVO> = _gameModel.getDeadStones();
+		if (deadStones.length > 0) {
+			getPlayerByColor((deadStones[0].color == StoneVO.WHITE) ? StoneVO.BLACK : StoneVO.WHITE).addPrisoners(deadStones.length);
+			_gameModel.removeStones(deadStones);
+			if (_gameModel.hiddenStones.length > 0) {
+				_boardView.showHiddenStonesThenRemoveDeads(_gameModel.hiddenStones, deadStones);
+				_gameModel.cleanHiddenStones();
+			} else {
+				_boardView.removeStones(deadStones);
+			}
+		}
+	}
+
 	private function onPass(event:Event):void {
 		if (MatchState.instance.phase == MatchState.MAIN_PHASE) {
+			homePlayer.played = true;
+			_gameModel.addPass(new StoneVO(homePlayer.vo.color, -1, -1, false, false, -1, true));
 			GameRpc.instance.pass(null, null);
 		}
 	}
@@ -298,5 +313,10 @@ public class GameController extends EventDispatcher implements IScene {
 	private function getPlayerByColor(color:uint):Player {
 		return _whitePlayer.vo.color == color ? _whitePlayer : _blackPlayer;
 	}
+
+	private function get homePlayer():Player {
+		return _whitePlayer.home ? _whitePlayer : _blackPlayer;
+	}
+
 }
 }

@@ -8,10 +8,11 @@ import flash.events.EventDispatcher;
 
 import game.events.BoardViewEvent;
 import game.events.MatchStateEvent;
-import game.events.PlayerEvent;
+import game.events.PlayerMoveEvent;
 import game.staticModel.MatchState;
 import game.player.PlayerVO;
 import game.staticModel.UserState;
+import game.stone.StoneVO;
 import game.stone.StoneVO;
 
 import rpc.GameRpc;
@@ -23,14 +24,22 @@ public class Player extends EventDispatcher {
 	private var _numHiddenStones:int;
 	private var _numPrisoners:int;
 
+	private var _played:Boolean;
+
 	public function Player(vo:PlayerVO) {
 		super();
+		_played = false;
 		_vo = vo;
 		_home = !vo || vo.userId == UserState.instance.userId;
 		_numHiddenStones = 1;
 		_numPrisoners = 0;
 		addListeners();
 	}
+
+	public function set played(value:Boolean):void {
+		_played = value;
+	}
+	public function get played():Boolean { return _played; }
 
 	public function addPrisoners(num:int):void {
 		_numPrisoners += num;
@@ -64,10 +73,11 @@ public class Player extends EventDispatcher {
 		}
 	}
 
+	//remote player event
 	private function onNewStone(event:MatchStateEvent):void {
 		var stoneVO:StoneVO = MatchState.instance.getLastStone();
 		if (stoneVO.color == _vo.color) {
-			dispatchEvent(new PlayerEvent(PlayerEvent.MOVE, stoneVO.x, stoneVO.y, stoneVO.hidden, stoneVO.basic));
+			dispatchEvent(new PlayerMoveEvent(PlayerMoveEvent.MOVE, stoneVO));
 		} else {
 			trace("new stone not of this player [Player.onNewStone]");
 		}
@@ -79,7 +89,7 @@ public class Player extends EventDispatcher {
 			_numHiddenStones--;
 			hidden = true;
 		}
-		dispatchEvent(new PlayerEvent(PlayerEvent.MOVE, event.cellX, event.cellY, hidden));
+		dispatchEvent(new PlayerMoveEvent(PlayerMoveEvent.MOVE, new StoneVO(_vo.color, event.cellX, event.cellY, hidden)));
 	}
 }
 }

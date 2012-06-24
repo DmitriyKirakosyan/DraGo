@@ -6,7 +6,7 @@
 
 -define (REQUEST_TIME, 10000).
 
--record (stone, {color, x, y, hidden = false, basic = false, number = 0}).
+-record (stone, {color, x = -1, y = -1, hidden = false, basic = false, number = 0, pass = false}).
 
 -record (game_request, {white_user_id, black_user_id, white_ready=false, black_ready=false, time_left=?REQUEST_TIME, last_update}).
 

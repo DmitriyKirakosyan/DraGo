@@ -6,13 +6,12 @@
  * To change this template use File | Settings | File Templates.
  */
 package game.estimate {
-import avmplus.finish;
-
-import game.*;
 
 import controller.GameController;
 
 import flash.geom.Point;
+
+import game.GameModel;
 
 import game.stone.StoneVO;
 
