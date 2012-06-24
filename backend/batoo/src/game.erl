@@ -111,8 +111,11 @@ handle_call({click_capture_stone, _UserId, X, Y}, _From, State = #game{phase = ?
         _True ->    {reply, {error, already_clicked}, State}
     end;
 
-handle_call({unclick_capture_stone, _UserId, X, Y}, _From, State = #game{phase = ?END_PHASE}) ->
-    {reply, {ok, deleted}, State#game{clicks=lists:delete({X, Y}, State#game.clicks)}};
+handle_call({unclick_capture_stone, _UserId, Points}, _From, State = #game{phase = ?END_PHASE}) ->
+    NewClicks = lists:filter(fun(Elem) ->
+        not lists:member(Elem, Points)
+    end, State#game.clicks),
+    {reply, {ok, deleted}, State#game{clicks=NewClicks}};
 
 handle_call({set_result_opinion, UserId, Opinion}, _From, State = #game{phase = ?END_PHASE}) ->
     {Reply, NewState} = case State#game.result_opinion of

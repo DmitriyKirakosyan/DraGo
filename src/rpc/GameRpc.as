@@ -46,8 +46,8 @@ package rpc {
 		public function click_capture_stone(x:int, y:int, callback:Function, errCallback:Function):void {
 			send({request: "click_capture_stone", x: x,  y: y}, callback, errCallback);
 		}
-		public function unclick_capture_stone(x:int, y:int, callback:Function, errCallback:Function):void {
-			send({request: "unclick_capture_stone", x: x,  y: y}, callback, errCallback);
+		public function unclick_capture_stone(points:Array, callback:Function, errCallback:Function):void {
+			send({request: "unclick_capture_stone", points: points}, callback, errCallback);
 		}
 
 		public function set_result_opinion(win:Boolean, callback:Function, errCallback:Function):void {

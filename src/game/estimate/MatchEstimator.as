@@ -46,6 +46,19 @@ public class MatchEstimator {
 		return stone && isCapturedStone(stone);
 	}
 
+	public function getCapturedPoints(point:Point):Vector.<StoneVO> {
+		var stone:StoneVO = _matrix[point.x][point.y];
+		if (!stone) { return null; }
+		for each (var capturedStones:Vector.<StoneVO> in _capturedStonesCollection) {
+			for each (var capturedStone:StoneVO in capturedStones) {
+				if (stone == capturedStone) {
+					return capturedStones;
+				}
+			}
+		}
+		return null;
+	}
+
 	public function addCapturedStone(point:Point):void {
 		var stone:StoneVO = _matrix[point.x][point.y];
 		if (!stone) { return; }
@@ -98,6 +111,11 @@ public class MatchEstimator {
 		}
 		updatePlayersCounts();
 	}
+
+
+	/* Internal functions */
+
+
 	private function updatePlayersCounts():void {
 		_whiteCounts = 0;
 		for each (var whitePoint:Point in _whitePoints) {

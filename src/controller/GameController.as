@@ -180,8 +180,13 @@ public class GameController extends EventDispatcher implements IScene {
 
 		var point:Point = new Point(event.cellX, event.cellY);
 		if (_estimator.hasCapturedPoint(point)) {
+			var capturedPoints:Vector.<StoneVO> = _estimator.getCapturedPoints(point);
 			_estimator.removeCapturedStone(point);
-			GameRpc.instance.unclick_capture_stone(point.x, point.y, null, null);
+			var points:Array = [];
+			for each (var stone:StoneVO in capturedPoints) {
+				points.push({x: stone.x, y: stone.y});
+			}
+			GameRpc.instance.unclick_capture_stone(points, null, null);
 		} else {
 			_estimator.addCapturedStone(point);
 			GameRpc.instance.click_capture_stone(point.x, point.y, null, null);

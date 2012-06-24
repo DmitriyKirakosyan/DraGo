@@ -55,9 +55,9 @@ handle(<<"click_capture_stone">>, RequestData, UserState) ->
 
 handle(<<"unclick_capture_stone">>, RequestData, UserState) ->
     UserId = UserState#user_state.user_id,
-    X = proplists:get_value(<<"x">>, RequestData),
-    Y = proplists:get_value(<<"y">>, RequestData),
-    {ok, UserState, game_room:unclick_capture_stone(UserId, X, Y)};
+    Points = proplists:get_value(<<"points">>, RequestData),
+    ParsedPoints = [{proplists:get_value(<<"x">>, Point), proplists:get_value(<<"y">>, Point)} || {struct, Point} <- Points],
+    {ok, UserState, game_room:unclick_capture_stone(UserId, ParsedPoints)};
 
 handle(<<"set_result_opinion">>, RequestData, UserState) ->
     UserId = UserState#user_state.user_id,
