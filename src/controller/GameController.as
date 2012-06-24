@@ -247,6 +247,7 @@ public class GameController extends EventDispatcher implements IScene {
 		//check for pass
 		if (stoneVO.pass) {
 			_gameModel.addPass(stoneVO);
+			_boardView.setPassMove();
 			return true;
 		}
 
@@ -290,6 +291,7 @@ public class GameController extends EventDispatcher implements IScene {
 		if (MatchState.instance.phase == MatchState.MAIN_PHASE) {
 			homePlayer.played = true;
 			_gameModel.addPass(new StoneVO(homePlayer.vo.color, -1, -1, false, false, -1, true));
+			_boardView.setPassMove();
 			GameRpc.instance.pass(null, null);
 		}
 	}

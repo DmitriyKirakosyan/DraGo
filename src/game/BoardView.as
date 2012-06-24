@@ -42,6 +42,15 @@ public class BoardView extends Sprite {
 		trace("stones removed [BoardView.clear]");
 	}
 
+	public function setPassMove():void {
+		if (_stones && _stones.length > 0) {
+			var stone:StoneView = _stones[_stones.length-1];
+			if (stone.contains(_stoneSelector)) {
+				stone.removeChild(_stoneSelector);
+			}
+		}
+	}
+
 	public function addStone(stoneVO:StoneVO):void {
 		var stoneView = createStone(stoneVO);
 		if (!stoneVO.basic) {
