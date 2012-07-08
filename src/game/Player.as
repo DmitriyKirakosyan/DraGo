@@ -6,6 +6,8 @@
 package game {
 import flash.events.EventDispatcher;
 
+import game.board.view.BoardView;
+
 import game.events.BoardViewEvent;
 import game.events.MatchStateEvent;
 import game.events.PlayerMoveEvent;

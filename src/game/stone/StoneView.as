@@ -8,7 +8,7 @@ import flash.display.DisplayObject;
 import flash.display.Sprite;
 import flash.filters.GlowFilter;
 
-import game.BoardView;
+import game.board.view.BoardView;
 
 public class StoneView extends Sprite {
 	private var _stoneVO:StoneVO;

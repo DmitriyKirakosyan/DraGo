@@ -11,7 +11,7 @@ import controller.GameController;
 
 import flash.geom.Point;
 
-import game.board.BoardModel;
+import game.board.model.BoardModel;
 
 import game.stone.StoneVO;
 

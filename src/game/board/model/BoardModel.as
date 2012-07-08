@@ -3,10 +3,11 @@
  * Date: 4/23/12
  * Time: 8:44 PM
  */
-package game.board {
-import controller.GameController;
+package game.board.model {
 
-import flash.geom.Point;
+import com.bit101.components.InputText;
+
+import controller.GameController;
 
 import game.stone.StoneVO;
 
@@ -19,14 +20,27 @@ public class BoardModel {
 	 */
 	private var _hiddenStones:Vector.<StoneVO>;
 
-	private var _countablePoints:Object; // String -> CountablePoint
+	private var _countablePoints:Vector.<CountablePoint>;
+	private static const NORMAL_COUNTABLE_POINT:int = 5;
 
 	public static function standartBoard():BoardModel {
 		var result:BoardModel = new BoardModel();
-		result.addCountablePoint(2, 2, 1);
-		result.addCountablePoint(2, 2, 3);
-		result.addCountablePoint(2, 3, 4);
-		return new BoardModel();
+		result.addCountablePoints(basicCountablePoints());
+		return result;
+	}
+
+	private static function basicCountablePoints():Vector.<CountablePoint> {
+		var result:Vector.<CountablePoint> = new Vector.<CountablePoint>();
+		result.push(new CountablePoint(5, 0, NORMAL_COUNTABLE_POINT));
+		result.push(new CountablePoint(5, 10, NORMAL_COUNTABLE_POINT));
+		result.push(new CountablePoint(0, 5, NORMAL_COUNTABLE_POINT));
+		result.push(new CountablePoint(10, 5, NORMAL_COUNTABLE_POINT));
+
+		result.push(new CountablePoint(2, 2, -NORMAL_COUNTABLE_POINT));
+		result.push(new CountablePoint(2, 8, -NORMAL_COUNTABLE_POINT));
+		result.push(new CountablePoint(8, 8, -NORMAL_COUNTABLE_POINT));
+		result.push(new CountablePoint(8, 2, -NORMAL_COUNTABLE_POINT));
+		return result;
 	}
 
 	public function BoardModel() {
@@ -35,13 +49,44 @@ public class BoardModel {
 		_hiddenStones = new Vector.<StoneVO>();
 	}
 
+	public function addCountablePoints(cPoints:Vector.<CountablePoint>):void {
+		for each (var point:CountablePoint in cPoints) {
+			addCountablePoint(point.x, point.y, point.count);
+		}
+	}
+
 	public function addCountablePoint(x:int, y:int, count:int):void {
-		if (!_countablePoints) { _countablePoints = {}; }
-		if (!_countablePoints[x + "x" + y]) {
-			_countablePoints[x + "x" + y] = count;
+		if (!_countablePoints) { _countablePoints = new Vector.<CountablePoint>(); }
+		if (!countablePointExists(x, y)) {
+			_countablePoints.push(new CountablePoint(x, y, count));
 		} else {
 			trace("already exists countable point [BoardModel.addCountablePoint]");
 		}
+	}
+
+	public function getCountOfPoint(x:int, y:int):int {
+		if (countablePointExists(x, y)) {
+			return getCountablePoint(x, y).count;
+		}
+		return 0;
+	}
+
+	private function getCountablePoint(x:int, y:int):CountablePoint {
+		for each (var cPoint:CountablePoint in _countablePoints) {
+			if (cPoint.x == x && cPoint.y == y) { return cPoint; }
+		}
+		return null;
+	}
+
+	private function countablePointExists(x:int, y:int):Boolean {
+		for each (var cPoint:CountablePoint in _countablePoints) {
+			if (cPoint.x == x && cPoint.y == y) { return true; }
+		}
+		return false;
+	}
+
+	public function getCountablePoints():Vector.<CountablePoint> {
+		return _countablePoints;
 	}
 
 	public function get lastStoneVO():StoneVO { return _lastStoneVO; }

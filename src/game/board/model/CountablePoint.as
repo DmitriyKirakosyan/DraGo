@@ -3,7 +3,7 @@
  * Date: 7/8/12
  * Time: 9:49 PM
  */
-package game.board {
+package game.board.model {
 public class CountablePoint {
 	private var _x:int;
 	private var _y:int;

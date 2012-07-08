@@ -3,7 +3,7 @@
  * Date: 4/23/12
  * Time: 7:57 PM
  */
-package game {
+package game.board.view {
 import com.greensock.TimelineMax;
 import com.greensock.TweenMax;
 
@@ -12,6 +12,9 @@ import controller.*;
 import flash.display.Sprite;
 import flash.events.MouseEvent;
 import flash.geom.Point;
+
+import game.board.model.BoardModel;
+import game.board.model.CountablePoint;
 
 import game.events.BoardViewEvent;
 import game.stone.StoneVO;
@@ -25,12 +28,16 @@ public class BoardView extends Sprite {
 	public static const CELL_HEIGHT:Number = 36;
 	public static const BORDER_WIDTH:Number = 52;
 
+	private var _model:BoardModel;
+
 	private var _stones:Vector.<StoneView>;
 	private var _territoryStones:Vector.<StoneView>;
+	private var _cPoints:Vector.<CPointView>;
 	private var _stoneSelector:Sprite;
 
-	public function BoardView() {
+	public function BoardView(model:BoardModel) {
 		super();
+		_model = model;
 		init();
 	}
 
@@ -38,8 +45,12 @@ public class BoardView extends Sprite {
 		for each (var stone:StoneView in _stones) {
 			if (contains(stone)) { removeChild(stone); }
 		}
+		for each (var cPoint:CPointView in _cPoints) {
+			if (contains(cPoint)) { removeChild(cPoint); }
+		}
+		_cPoints = null;
 		_stones = null;
-		trace("stones removed [BoardView.clear]");
+		trace("board cleared [BoardView.clear]");
 	}
 
 	public function setPassMove():void {
@@ -95,8 +106,8 @@ public class BoardView extends Sprite {
 		var stoneView:StoneView;
 		for each (var point:Point in points) {
 			stoneView = new StoneView(new StoneVO(color, point.x, point.y));
-			stoneView.x = point.x * CELL_WIDTH + BORDER_WIDTH;
-			stoneView.y = point.y * CELL_HEIGHT + BORDER_WIDTH;
+			stoneView.x = getBoardX(x);
+			stoneView.y = getBoardY(y);
 			stoneView.scaleX = stoneView.scaleY = .5;
 			if (!_territoryStones) { _territoryStones = new Vector.<StoneView>(); }
 			_territoryStones.push(stoneView);
@@ -120,8 +131,8 @@ public class BoardView extends Sprite {
 
 	private function createStone(stoneVO:StoneVO):StoneView {
 		var stoneView:StoneView = new StoneView(stoneVO);
-		stoneView.x = stoneVO.x * CELL_WIDTH + BORDER_WIDTH;
-		stoneView.y = stoneVO.y * CELL_HEIGHT + BORDER_WIDTH;
+		stoneView.x = getBoardX(stoneVO.x);
+		stoneView.y = getBoardY(stoneVO.y);
 		return stoneView;
 	}
 
@@ -148,6 +159,7 @@ public class BoardView extends Sprite {
 	private function init():void {
 		addChild(new Main.BOARD_VIEW());
 		createStoneSelector();
+		addCountablePoints();
 		addListeners();
 	}
 
@@ -158,44 +170,35 @@ public class BoardView extends Sprite {
 		_stoneSelector.graphics.endFill();
 	}
 
+	private function addCountablePoints():void {
+		var cPoints:Vector.<CountablePoint> = _model.getCountablePoints();
+		if (cPoints) {
+			for each (var cPoint:CountablePoint in cPoints) {
+				addCPointToBoard(cPoint);
+			}
+		}
+	}
+
+	private function addCPointToBoard(countablePoint:CountablePoint):void {
+		if (!_cPoints) { _cPoints = new Vector.<CPointView>(); }
+		var cPointView:CPointView = new CPointView(countablePoint.count > 0);
+		cPointView.x = getBoardX(countablePoint.x);
+		cPointView.y = getBoardY(countablePoint.y);
+		_cPoints.push(cPointView);
+		super.addChild(cPointView);
+	}
+
 	private function addListeners():void {
 		super.addEventListener(MouseEvent.CLICK, onMouseClick);
 	}
 
 	private function onMouseClick(event:MouseEvent):void {
-		var stoneX:int = (event.localX + CELL_WIDTH/2 - BORDER_WIDTH) / CELL_WIDTH;
-		var stoneY:int = (event.localY + CELL_HEIGHT/2 - BORDER_WIDTH) / CELL_HEIGHT;
+		var stoneX:int = (super.mouseX + CELL_WIDTH/2 - BORDER_WIDTH) / CELL_WIDTH;
+		var stoneY:int = (super.mouseY + CELL_HEIGHT/2 - BORDER_WIDTH) / CELL_HEIGHT;
 		if (stoneX >= 0 && stoneX <= GameController.ROWS_NUM &&
 				stoneY >= 0 && stoneY <= GameController.ROWS_NUM) {
 			dispatchEvent(new BoardViewEvent(BoardViewEvent.CLICK, stoneX, stoneY, event.shiftKey));
 		}
-	}
-
-	private function drawBackground():void {
-		this.graphics.beginFill(0x2fca43);
-		this.graphics.drawRect(0, 0, boardWidth, boardHeight);
-		this.graphics.endFill();
-	}
-	private function drawLines():void {
-		this.graphics.lineStyle(1, 0);
-		//horizontal
-		for (var i:int = 0; i < GameController.ROWS_NUM; ++i) {
-			this.graphics.moveTo(BORDER_WIDTH + i * CELL_WIDTH, BORDER_WIDTH);
-			this.graphics.lineTo(BORDER_WIDTH + i * CELL_WIDTH, boardHeight - BORDER_WIDTH);
-		}
-		//vertical
-		for (var j:int = 0; j < GameController.ROWS_NUM; ++j) {
-			this.graphics.moveTo(BORDER_WIDTH, BORDER_WIDTH + j * CELL_HEIGHT);
-			this.graphics.lineTo(boardWidth - BORDER_WIDTH, BORDER_WIDTH + j * CELL_HEIGHT);
-		}
-	}
-	private function drawBoarder():void {
-		this.graphics.lineStyle(2, 0);
-		this.graphics.moveTo(0, 0);
-		this.graphics.lineTo(0, boardHeight);
-		this.graphics.lineTo(boardWidth, boardHeight);
-		this.graphics.lineTo(boardWidth, 0);
-		this.graphics.lineTo(0, 0);
 	}
 
 	public function get boardWidth():Number {
@@ -204,6 +207,9 @@ public class BoardView extends Sprite {
 	public function get boardHeight():Number {
 		return (GameController.ROWS_NUM-1) * CELL_HEIGHT + BORDER_WIDTH*2;
 	}
+
+	private function getBoardX(matrixX:int):Number { return BORDER_WIDTH + matrixX * CELL_WIDTH; }
+	private function getBoardY(matrixY:int):Number { return BORDER_WIDTH + matrixY * CELL_HEIGHT; }
 
 }
 }

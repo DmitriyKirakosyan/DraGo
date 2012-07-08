@@ -13,8 +13,8 @@ import flash.events.EventDispatcher;
 import flash.events.MouseEvent;
 import flash.geom.Point;
 
-import game.BoardView;
-import game.board.BoardModel;
+import game.board.view.BoardView;
+import game.board.model.BoardModel;
 import game.Player;
 import game.estimate.MatchEstimator;
 import game.events.BoardViewEvent;
@@ -37,7 +37,7 @@ public class GameController extends EventDispatcher implements IScene {
 	private var _container:Sprite;
 	private var _gameContainer:Sprite;
 	private var _boardView:BoardView;
-	private var _gameModel:BoardModel;
+	private var _boardModel:BoardModel;
 	private var _gameInterface:GameInterface;
 
 	private var _whitePlayer:Player;
@@ -49,9 +49,8 @@ public class GameController extends EventDispatcher implements IScene {
 
 	public function GameController(container:Sprite):void {
 		_container = container;
-		initObjects();
-		_gameModel = new BoardModel();
-		_estimator =  new MatchEstimator(_gameModel);
+		init();
+		_estimator =  new MatchEstimator(_boardModel);
 		MatchState.instance.addEventListener(MatchStateEvent.PHASE_CHANGED, onMatchPhaseChanged);
 		MatchState.instance.addEventListener(MatchStateEvent.BASIC_PHASE_CHANGED_ON_MAIN_PHASE, onStartMainPhase);
 		MatchState.instance.addEventListener(MatchStateEvent.GAME_STOPPED, onGameStopped);
@@ -85,7 +84,7 @@ public class GameController extends EventDispatcher implements IScene {
 		_container.removeChild(_gameContainer);
 		_whitePlayer.remove();
 		_blackPlayer.remove();
-		_gameModel.removeAllStones();
+		_boardModel.removeAllStones();
 		_boardView.clear();
 	}
 
@@ -102,7 +101,7 @@ public class GameController extends EventDispatcher implements IScene {
 
 	private function onStartMainPhase(event:MatchStateEvent):void {
 		_boardView.clear();
-		_gameModel.removeAllStones();
+		_boardModel.removeAllStones();
 		MatchState.instance.addEventListener(MatchStateEvent.UPDATED, onMatchUpdatedInMainPhase);
 	}
 	private function onMatchUpdatedInMainPhase(event:MatchStateEvent):void {
@@ -152,12 +151,13 @@ public class GameController extends EventDispatcher implements IScene {
 		player.removeEventListener(PlayerMoveEvent.MOVE, onPlayerMove);
 	}
 
-	private function initObjects():void {
+	private function init():void {
+		_boardModel = BoardModel.standartBoard();
 		_gameContainer = new Sprite();
 		_gameContainer.graphics.beginFill(0xCDC5BF);
 		_gameContainer.graphics.drawRect(0, 0, Main.WIDTH, Main.HEIGHT);
 		_gameContainer.graphics.endFill();
-		_boardView = new BoardView();
+		_boardView = new BoardView(_boardModel);
 		_boardView.addEventListener(BoardViewEvent.CLICK, onBoardViewClick);
 		_boardView.y = 20;
 		initInterface();
@@ -172,8 +172,8 @@ public class GameController extends EventDispatcher implements IScene {
 	}
 
 	private function onBoardViewClick(event:BoardViewEvent):void {
-		if (!_gameModel.isValidPoint(event.cellX, event.cellY)) { return; }
-		if (_gameModel.emptyPoint(event.cellX, event.cellY) ||
+		if (!_boardModel.isValidPoint(event.cellX, event.cellY)) { return; }
+		if (_boardModel.emptyPoint(event.cellX, event.cellY) ||
 				MatchState.instance.phase != MatchState.END_PHASE) {
 			return;
 		}
@@ -195,15 +195,15 @@ public class GameController extends EventDispatcher implements IScene {
 	}
 
 	private function accessToMove(homePlayer:Player):Boolean {
-		if (!_gameModel.lastStoneVO) {
+		if (!_boardModel.lastStoneVO) {
 			if (MatchState.instance.movePlayer != homePlayer.vo.userId) {
 				return false;
 			}
 		} else if (MatchState.instance.phase == MatchState.MAIN_PHASE &&
-								_gameModel.lastStoneVO.color == homePlayer.vo.color) {
+								_boardModel.lastStoneVO.color == homePlayer.vo.color) {
 			return false;
 		}
-		if (MatchState.instance.phase == MatchState.BASIC_PHASE && _gameModel.getNumStones() == MatchState.NUM_BASIC_STONES) {
+		if (MatchState.instance.phase == MatchState.BASIC_PHASE && _boardModel.getNumStones() == MatchState.NUM_BASIC_STONES) {
 			return false;
 		}
 		if (MatchState.instance.phase == MatchState.END_PHASE) { return false; }
@@ -219,14 +219,16 @@ public class GameController extends EventDispatcher implements IScene {
 		}
 
 		//check for valid point
-		if (!_gameModel.isValidPoint(event.stone.x, event.stone.y) && !event.stone.pass) { return; }
+		if (!_boardModel.isValidPoint(event.stone.x, event.stone.y) && !event.stone.pass) { return; }
 
 		if (player.home) {
 			event.stone.basic = MatchState.instance.phase == MatchState.BASIC_PHASE;
 		}
 
-		if (makeMove(event.stone) && player.home) {
-			GameRpc.instance.makeMove(event.stone.x, event.stone.y, event.stone.hidden, null, null);
+		if (makeMove(event.stone)) {
+			if (player.home) {
+				GameRpc.instance.makeMove(event.stone.x, event.stone.y, event.stone.hidden, null, null);
+			}
 		}
 	}
 
@@ -245,22 +247,28 @@ public class GameController extends EventDispatcher implements IScene {
 	private function makeMove(stoneVO:StoneVO):Boolean {
 		//check for pass
 		if (stoneVO.pass) {
-			_gameModel.addPass(stoneVO);
+			_boardModel.addPass(stoneVO);
 			_boardView.setPassMove();
 			return true;
 		}
 
-		//addNormalStone
-		if (_gameModel.emptyPoint(stoneVO.x, stoneVO.y) && !_gameModel.isSelfKilled(stoneVO)) {
-			_gameModel.addStone(stoneVO);
+		//add stone to board
+		if (_boardModel.emptyPoint(stoneVO.x, stoneVO.y) && !_boardModel.isSelfKilled(stoneVO)) {
+			_boardModel.addStone(stoneVO);
 			placeStoneOnBoard(stoneVO);
 			checkDeadStones();
 		} else {
-			if (_gameModel.getStone(stoneVO.x, stoneVO.y) && _gameModel.getStone(stoneVO.x, stoneVO.y).hidden) {
-				_boardView.justShowHiddenStone(_gameModel.getStone(stoneVO.x, stoneVO.y));
+			if (_boardModel.getStone(stoneVO.x, stoneVO.y) && _boardModel.getStone(stoneVO.x, stoneVO.y).hidden) {
+				_boardView.justShowHiddenStone(_boardModel.getStone(stoneVO.x, stoneVO.y));
 			}
 			return false;
 		}
+
+		//countable point
+		(stoneVO.color == StoneVO.WHITE) ?
+			_estimator.addWhiteCounts(_boardModel.getCountOfPoint(stoneVO.x, stoneVO.y)) :
+			_estimator.addBlackCounts(_boardModel.getCountOfPoint(stoneVO.x, stoneVO.y));
+
 		return true;
 	}
 
@@ -273,17 +281,17 @@ public class GameController extends EventDispatcher implements IScene {
 	}
 
 	private function checkDeadStones():void {
-		var deadStones:Vector.<StoneVO> = _gameModel.getDeadStones();
+		var deadStones:Vector.<StoneVO> = _boardModel.getDeadStones();
 		if (deadStones.length > 0) {
 
 			(deadStones[0].color == StoneVO.WHITE) ?
 				_estimator.addBlackCounts(deadStones.length) :
 				_estimator.addWhiteCounts(deadStones.length);
 
-			_gameModel.removeStones(deadStones);
-			if (_gameModel.hiddenStones.length > 0) {
-				_boardView.showHiddenStonesThenRemoveDeads(_gameModel.hiddenStones, deadStones);
-				_gameModel.cleanHiddenStones();
+			_boardModel.removeStones(deadStones);
+			if (_boardModel.hiddenStones.length > 0) {
+				_boardView.showHiddenStonesThenRemoveDeads(_boardModel.hiddenStones, deadStones);
+				_boardModel.cleanHiddenStones();
 			} else {
 				_boardView.removeStones(deadStones);
 			}
@@ -292,7 +300,7 @@ public class GameController extends EventDispatcher implements IScene {
 
 	private function onPass(event:Event):void {
 		if (MatchState.instance.phase == MatchState.MAIN_PHASE) {
-			_gameModel.addPass(new StoneVO(homePlayer.vo.color, -1, -1, false, false, -1, true));
+			_boardModel.addPass(new StoneVO(homePlayer.vo.color, -1, -1, false, false, -1, true));
 			_boardView.setPassMove();
 			GameRpc.instance.pass(null, null);
 		}
