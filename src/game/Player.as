@@ -13,9 +13,6 @@ import game.staticModel.MatchState;
 import game.player.PlayerVO;
 import game.staticModel.UserState;
 import game.stone.StoneVO;
-import game.stone.StoneVO;
-
-import rpc.GameRpc;
 
 public class Player extends EventDispatcher {
 	private var _boardView:BoardView;
@@ -37,7 +34,6 @@ public class Player extends EventDispatcher {
 		}
 	}
 
-	public function get numHiddenStones():int { return _numHiddenStones; }
 	public function get vo():PlayerVO { return _vo; }
 	public function get home():Boolean { return _home; }
 

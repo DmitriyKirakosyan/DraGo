@@ -3,12 +3,14 @@
  * Date: 4/23/12
  * Time: 8:44 PM
  */
-package game {
+package game.board {
 import controller.GameController;
+
+import flash.geom.Point;
 
 import game.stone.StoneVO;
 
-public class GameModel {
+public class BoardModel {
 	private var _matrix:Vector.<Vector.<StoneVO>>;
 	private var _lastStoneVO:StoneVO;
 
@@ -17,10 +19,29 @@ public class GameModel {
 	 */
 	private var _hiddenStones:Vector.<StoneVO>;
 
-	public function GameModel() {
+	private var _countablePoints:Object; // String -> CountablePoint
+
+	public static function standartBoard():BoardModel {
+		var result:BoardModel = new BoardModel();
+		result.addCountablePoint(2, 2, 1);
+		result.addCountablePoint(2, 2, 3);
+		result.addCountablePoint(2, 3, 4);
+		return new BoardModel();
+	}
+
+	public function BoardModel() {
 		super();
 		createMatrix();
 		_hiddenStones = new Vector.<StoneVO>();
+	}
+
+	public function addCountablePoint(x:int, y:int, count:int):void {
+		if (!_countablePoints) { _countablePoints = {}; }
+		if (!_countablePoints[x + "x" + y]) {
+			_countablePoints[x + "x" + y] = count;
+		} else {
+			trace("already exists countable point [BoardModel.addCountablePoint]");
+		}
 	}
 
 	public function get lastStoneVO():StoneVO { return _lastStoneVO; }

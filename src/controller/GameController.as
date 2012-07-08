@@ -14,7 +14,7 @@ import flash.events.MouseEvent;
 import flash.geom.Point;
 
 import game.BoardView;
-import game.GameModel;
+import game.board.BoardModel;
 import game.Player;
 import game.estimate.MatchEstimator;
 import game.events.BoardViewEvent;
@@ -37,7 +37,7 @@ public class GameController extends EventDispatcher implements IScene {
 	private var _container:Sprite;
 	private var _gameContainer:Sprite;
 	private var _boardView:BoardView;
-	private var _gameModel:GameModel;
+	private var _gameModel:BoardModel;
 	private var _gameInterface:GameInterface;
 
 	private var _whitePlayer:Player;
@@ -50,7 +50,7 @@ public class GameController extends EventDispatcher implements IScene {
 	public function GameController(container:Sprite):void {
 		_container = container;
 		initObjects();
-		_gameModel = new GameModel();
+		_gameModel = new BoardModel();
 		_estimator =  new MatchEstimator(_gameModel);
 		MatchState.instance.addEventListener(MatchStateEvent.PHASE_CHANGED, onMatchPhaseChanged);
 		MatchState.instance.addEventListener(MatchStateEvent.BASIC_PHASE_CHANGED_ON_MAIN_PHASE, onStartMainPhase);

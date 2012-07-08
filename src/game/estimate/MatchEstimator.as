@@ -11,12 +11,12 @@ import controller.GameController;
 
 import flash.geom.Point;
 
-import game.GameModel;
+import game.board.BoardModel;
 
 import game.stone.StoneVO;
 
 public class MatchEstimator {
-	private var _gameModel:GameModel;
+	private var _gameModel:BoardModel;
 	private var _matrix:Vector.<Vector.<StoneVO>>;
 	private var _whitePoints:Vector.<Point>;
 	private var _blackPoints:Vector.<Point>;
@@ -33,7 +33,7 @@ public class MatchEstimator {
 	private const BLACK:String = "black";
 	private const NONE:String = "none";
 
-	public function MatchEstimator(gameModel:GameModel):void {
+	public function MatchEstimator(gameModel:BoardModel):void {
 		super();
 		_whiteTerritoryCounts = 0;
 		_blackTerritoryCounts = 0;
