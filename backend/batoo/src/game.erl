@@ -27,35 +27,23 @@ start_link(WhiteUserId, BlackUserId) ->
 %%%===================================================================
 
 init([WhiteUserId, BlackUserId]) ->
-    Game = #game{white_user_id=WhiteUserId, black_user_id=BlackUserId,
+    WhitePlayer = #player{user_id=WhiteUserId},
+    BlackPlayer = #player{user_id=BlackUserId},
+    Game = #game{white_player = WhitePlayer, black_player = BlackPlayer,
                     phase=?BASIC_PHASE, stones=[], move_player=WhiteUserId},
     {ok, Game}.
 
 %% state %%
 
 handle_call({get_game_state, UserId}, _From, State) ->
-    {MovePlayer, Stones} = if
-        State#game.phase =:= ?BASIC_PHASE ->
-            StoneColor = if UserId =:= State#game.white_user_id -> white; true -> black end,
-            {UserId, get_stones_by_color(StoneColor, State#game.stones)};
-        true -> {State#game.move_player, State#game.stones} end,
-    EncodedStones = lists:map(
-        fun(Stone) -> [{color, Stone#stone.color}, {x, Stone#stone.x},
-                        {y, Stone#stone.y}, {hidden, Stone#stone.hidden},
-                        {basic, Stone#stone.basic}, {number, Stone#stone.number},
-                        {pass, Stone#stone.pass}]
-        end
-    , Stones),
-    Clicks = lists:map( fun({X, Y}) -> [{x, X}, {y, Y}] end, State#game.clicks),
-    Reply = [{phase, State#game.phase}, {white_user_id, State#game.white_user_id}, {black_user_id, State#game.black_user_id},
-                {move_player, MovePlayer}, {stones, EncodedStones}, {clicks, Clicks}],
+    Reply = state_to_proplist(State, UserId),
     {reply, {ok, [{game, Reply}]}, State};
 
 %% move %%
 %% basic phase
 
 handle_call({make_move, UserId, X, Y, _Hidden}, _From, State = #game{phase = ?BASIC_PHASE}) ->
-    StoneColor = if UserId =:= State#game.white_user_id -> white; true -> black end,
+    StoneColor = user_stone_color(State, UserId),
     UserStones = get_stones_by_color(StoneColor, State#game.stones),
     UserStonesLength = lists:flatlength(UserStones),
     {Reply, State1} = if
@@ -83,23 +71,28 @@ handle_call({make_move, UserId, X, Y, _Hidden}, _From, State = #game{phase = ?BA
 %% main phase
 
 handle_call({make_move, UserId, X, Y, Hidden}, _From, State = #game{move_player=UserId, phase = ?MAIN_PHASE}) ->
-    {StoneColor, MovePlayer} = if UserId =:= State#game.white_user_id -> {white, State#game.black_user_id};
-                                    true -> {black, State#game.white_user_id} end,
+    StoneColor = user_stone_color(State, UserId),
+    MovePlayer = get_opponent(State, UserId),
     NewStoneNumber = get_new_stone_number(State#game.stones),
-    NewState = State#game{move_player=MovePlayer, stones=[#stone{color=StoneColor, x=X, y=Y, hidden=Hidden, number=NewStoneNumber} | State#game.stones]},
+    Stone = #stone{color=StoneColor, x=X, y=Y, hidden=Hidden, number=NewStoneNumber},
+    NewState = State#game{move_player=MovePlayer, stones=[Stone | State#game.stones]},
     {reply, {ok, move_saved}, NewState};
 
 handle_call({pass, UserId}, _From, State = #game{move_player=UserId, phase = ?MAIN_PHASE, stones = [#stone{pass = true} | _OtherStones]}) ->
     {reply, {ok, game_stopped}, State#game{phase=?END_PHASE}};
 
 handle_call({pass, UserId}, _From, State = #game{move_player=UserId, phase = ?MAIN_PHASE}) ->
-    {StoneColor, MovePlayer} = if UserId =:= State#game.white_user_id -> {white, State#game.black_user_id};
-                                    true -> {black, State#game.white_user_id} end,
-
+    StoneColor = user_stone_color(State, UserId),
+    MovePlayer = get_opponent(State, UserId),
+    
     Stones = State#game.stones,
-    NewStoneNumber = get_new_stone_number(State#game.stones),
+    NewStoneNumber = get_new_stone_number(Stones),
     PassStone = #stone{color=StoneColor, number = NewStoneNumber, pass = true},
     {reply, {ok, pass_saved}, State#game{move_player=MovePlayer, stones = [PassStone | Stones]}};
+
+handle_call({use_ability, UserId, AbilityName}, _From, State = #game{move_player=UserId, phase = ?MAIN_PHASE}) ->
+    {ok, NewState} = ability_executor:execute(State, UserId, AbilityName),
+    {reply, {ok, used}, NewState}; %%TODO предусмотреть ошибку использования способности
 
 %% end phase %%
 
@@ -155,6 +148,49 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+user_stone_color(#game{white_player = #player{user_id = UserId}}, UserId) ->
+    white;
+user_stone_color(#game{black_player = #player{user_id = UserId}}, UserId) ->
+    black.
+
+get_opponent(State = #game{white_player = #player{user_id = UserId}}, UserId) ->
+    State#game.black_player#player.user_id;
+get_opponent(State = #game{black_player = #player{user_id = UserId}}, UserId) ->
+    State#game.white_player#player.user_id.
+
+state_to_proplist(State = #game{}, UserId) ->
+    {MovePlayer, Stones} = if
+        State#game.phase =:= ?BASIC_PHASE ->
+            StoneColor = user_stone_color(State, UserId),
+            {UserId, get_stones_by_color(StoneColor, State#game.stones)};
+        true -> {State#game.move_player, State#game.stones} end,
+    EncodedStones = stones_to_proplist(Stones),
+    WhitePlayer = player_to_proplist(State#game.white_player),
+    BlackPlayer = player_to_proplist(State#game.black_player),
+    Clicks = lists:map( fun({X, Y}) -> [{x, X}, {y, Y}] end, State#game.clicks),
+    [
+        {phase, State#game.phase},
+        {white_player, WhitePlayer},
+        {black_player, BlackPlayer},
+        {move_player, MovePlayer},
+        {stones, EncodedStones},
+        {clicks, Clicks}
+    ].
+
+player_to_proplist(Player = #player{}) ->
+    [{user_id, Player#player.user_id}, {ability_list, Player#player.ability_list}].
+
+stones_to_proplist(Stones) ->
+    lists:map(
+        fun(Stone) -> [{color, Stone#stone.color}, {x, Stone#stone.x},
+                        {y, Stone#stone.y}, {hidden, Stone#stone.hidden},
+                        {basic, Stone#stone.basic}, {number, Stone#stone.number},
+                        {pass, Stone#stone.pass}]
+        end
+    , Stones).
+
+    
 
 get_new_stone_number([]) -> 0;
 get_new_stone_number([Stone | _]) -> Stone#stone.number+1.
