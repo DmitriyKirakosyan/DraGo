@@ -91,8 +91,8 @@ handle_call({pass, UserId}, _From, State = #game{move_player=UserId, phase = ?MA
     {reply, {ok, pass_saved}, State#game{move_player=MovePlayer, stones = [PassStone | Stones]}};
 
 handle_call({use_ability, UserId, AbilityName}, _From, State = #game{move_player=UserId, phase = ?MAIN_PHASE}) ->
-    {ok, NewState} = ability_executor:execute(State, UserId, AbilityName),
-    {reply, {ok, used}, NewState}; %%TODO предусмотреть ошибку использования способности
+    {ok, NewState, Reply} = ability_executor:execute(State, UserId, AbilityName),
+    {reply, Reply, NewState}; %%TODO предусмотреть ошибку использования способности
 
 %% end phase %%
 
@@ -203,15 +203,3 @@ get_stones_by_color(Color, Stones) ->
 has_same_placed_stone(PlacedStone, Stones) ->
     StonesWithXY = [Stone || Stone <- Stones, Stone#stone.x =:= PlacedStone#stone.x andalso Stone#stone.y =:= PlacedStone#stone.y],
     lists:flatlength(StonesWithXY) > 1.
-
-
-make_board_matrix() ->
-    [ { X, [ {Y, 0} || Y <- [0,1,2,3,4,5,6,7,8,9,10]] } || X <- [0,1,2,3,4,5,6,7,8,9,10]].
-
-
-%%%===================================================================
-%%% Tests
-%%%===================================================================
-
-make_board_matrix_test() ->
-    [{0, [{0, 0} | [{1, 0} | _] ]} | [{1, [{0, 0} | _]} | _] ] = make_board_matrix().
