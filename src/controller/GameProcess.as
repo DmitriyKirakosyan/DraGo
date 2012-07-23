@@ -33,7 +33,7 @@ import rpc.GameRpc;
 import scene.IScene;
 import scene.SceneEvent;
 
-public class GameController extends EventDispatcher implements IScene {
+public class GameProcess extends EventDispatcher implements IScene {
 	private var _container:Sprite;
 	private var _gameContainer:Sprite;
 	private var _boardView:BoardView;
@@ -47,7 +47,7 @@ public class GameController extends EventDispatcher implements IScene {
 
 	public static const ROWS_NUM:int = 11;
 
-	public function GameController(container:Sprite):void {
+	public function GameProcess(container:Sprite):void {
 		_container = container;
 		init();
 		_estimator =  new MatchEstimator(_boardModel);

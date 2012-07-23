@@ -7,7 +7,7 @@ package game.board.model {
 
 import com.bit101.components.InputText;
 
-import controller.GameController;
+import controller.GameProcess;
 
 import game.stone.StoneVO;
 
@@ -107,8 +107,8 @@ public class BoardModel {
 
 	public function getNumStones():int {
 		var result:int = 0;
-		for (var i:int = 0; i < GameController.ROWS_NUM; ++i) {
-			for (var j:int = 0; j < GameController.ROWS_NUM; ++j) {
+		for (var i:int = 0; i < GameProcess.ROWS_NUM; ++i) {
+			for (var j:int = 0; j < GameProcess.ROWS_NUM; ++j) {
 				if (_matrix[i][j]) { result++; }
 			}
 		}
@@ -139,8 +139,8 @@ public class BoardModel {
 	}
 
 	public function removeAllStones():void {
-		for (var i:int = 0; i < GameController.ROWS_NUM; ++i) {
-			for (var j:int = 0; j < GameController.ROWS_NUM; ++j) {
+		for (var i:int = 0; i < GameProcess.ROWS_NUM; ++i) {
+			for (var j:int = 0; j < GameProcess.ROWS_NUM; ++j) {
 				_matrix[i][j] = null;
 			}
 		}
@@ -160,15 +160,15 @@ public class BoardModel {
 	}
 
 	public function isValidPoint(x:int, y:int):Boolean {
-		return x >=0 && x < GameController.ROWS_NUM && y >= 0 && y < GameController.ROWS_NUM;
+		return x >=0 && x < GameProcess.ROWS_NUM && y >= 0 && y < GameProcess.ROWS_NUM;
 	}
 
 	// Internal functions
 
 	private function createMatrix():void {
-		_matrix = new Vector.<Vector.<StoneVO>>(GameController.ROWS_NUM, true);
-		for (var i:int = 0; i < GameController.ROWS_NUM; ++i) {
-			_matrix[i] = new Vector.<StoneVO>(GameController.ROWS_NUM, true);
+		_matrix = new Vector.<Vector.<StoneVO>>(GameProcess.ROWS_NUM, true);
+		for (var i:int = 0; i < GameProcess.ROWS_NUM; ++i) {
+			_matrix[i] = new Vector.<StoneVO>(GameProcess.ROWS_NUM, true);
 		}
 	}
 

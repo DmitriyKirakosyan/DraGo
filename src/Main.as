@@ -1,5 +1,5 @@
 package {
-import controller.GameController;
+import controller.GameProcess;
 
 import core.enum.WindowsENUM;
 
@@ -49,7 +49,7 @@ import scene.SceneController;
 		private function addScenes():void {
 			_sceneController = new SceneController();
 			const menuScene:MainMenu = new MainMenu(this);
-			const gameScene:GameController = new GameController(this);
+			const gameScene:GameProcess = new GameProcess(this);
 			_sceneController.addScene(menuScene, true);
 			_sceneController.addScene(gameScene);
 			_sceneController.addSceneDependence(menuScene, gameScene, true);

@@ -7,7 +7,7 @@
  */
 package game.estimate {
 
-import controller.GameController;
+import controller.GameProcess;
 
 import flash.geom.Point;
 
@@ -111,8 +111,8 @@ public class MatchEstimator {
 		var estimatingPoints:Vector.<Point> = new Vector.<Point>();
 		var capturedByColor:Object;
 
-		for (var i:int = 0; i < GameController.ROWS_NUM; ++i) {
-			for (var j:int = 0; j < GameController.ROWS_NUM; ++j) {
+		for (var i:int = 0; i < GameProcess.ROWS_NUM; ++i) {
+			for (var j:int = 0; j < GameProcess.ROWS_NUM; ++j) {
 				capturedByColor = {};
 				findCapturedPoints(capturedByColor, new Point(i, j), estimatingPoints, wasPoints);
 				if (estimatingPoints.length > 0) {
@@ -241,7 +241,7 @@ public class MatchEstimator {
 	}
 
 	private function validPoint(x:int, y:int):Boolean {
-		return x >=0 && x < GameController.ROWS_NUM && y >= 0 && y < GameController.ROWS_NUM;
+		return x >=0 && x < GameProcess.ROWS_NUM && y >= 0 && y < GameProcess.ROWS_NUM;
 	}
 
 }

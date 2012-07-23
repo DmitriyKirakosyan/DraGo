@@ -195,17 +195,17 @@ public class BoardView extends Sprite {
 	private function onMouseClick(event:MouseEvent):void {
 		var stoneX:int = (super.mouseX + CELL_WIDTH/2 - BORDER_WIDTH) / CELL_WIDTH;
 		var stoneY:int = (super.mouseY + CELL_HEIGHT/2 - BORDER_WIDTH) / CELL_HEIGHT;
-		if (stoneX >= 0 && stoneX <= GameController.ROWS_NUM &&
-				stoneY >= 0 && stoneY <= GameController.ROWS_NUM) {
+		if (stoneX >= 0 && stoneX <= GameProcess.ROWS_NUM &&
+				stoneY >= 0 && stoneY <= GameProcess.ROWS_NUM) {
 			dispatchEvent(new BoardViewEvent(BoardViewEvent.CLICK, stoneX, stoneY, event.shiftKey));
 		}
 	}
 
 	public function get boardWidth():Number {
-		return (GameController.ROWS_NUM-1) * CELL_WIDTH + BORDER_WIDTH*2;
+		return (GameProcess.ROWS_NUM-1) * CELL_WIDTH + BORDER_WIDTH*2;
 	}
 	public function get boardHeight():Number {
-		return (GameController.ROWS_NUM-1) * CELL_HEIGHT + BORDER_WIDTH*2;
+		return (GameProcess.ROWS_NUM-1) * CELL_HEIGHT + BORDER_WIDTH*2;
 	}
 
 	private function getBoardX(matrixX:int):Number { return BORDER_WIDTH + matrixX * CELL_WIDTH; }
