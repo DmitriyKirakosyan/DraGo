@@ -1,6 +1,5 @@
 package rpc {
-	import by.blooddy.crypto.serialization.JSON;
-	
+
 	import flash.events.EventDispatcher;
 
 	public class GameRpc extends EventDispatcher {
@@ -68,7 +67,7 @@ package rpc {
 			if (authKey && authKey != "") {
 				request["session_key"] = authKey;
 			}
-			_rpc.send(JSON.encode(request), callback, errback);
+			_rpc.send(JSON.stringify(request), callback, errback);
 		}
 
 		/* Internal functions */

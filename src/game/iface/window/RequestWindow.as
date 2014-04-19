@@ -15,8 +15,6 @@ import flash.text.TextFieldAutoSize;
 
 import game.staticModel.UserState;
 
-import mx.controls.Text;
-
 import rpc.GameRpc;
 
 public class RequestWindow extends WindowBase implements IScreenWindow {

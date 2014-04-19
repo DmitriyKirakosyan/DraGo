@@ -41,7 +41,7 @@ upgrade() ->
 %% @spec init([]) -> SupervisorTree
 %% @doc supervisor callback.
 init([]) ->
-    Web = web_specs(batoo_web, 8080),
+    Web = web_specs(batoo_web, 80),
     %DB = {gamedb, {gamedb, start, []}, permanent, 5000, worker, dynamic},
     SessionManager = {session_manager, {session_manager, start_link, []}, permanent, 5000, worker, dynamic},
     GameRoom = {game_room, {game_room, start_link, []}, permanent, 5000, worker, dynamic},

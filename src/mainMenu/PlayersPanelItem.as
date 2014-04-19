@@ -11,10 +11,6 @@ import flash.text.TextFieldAutoSize;
 
 import game.manager.RequestManager;
 
-import mx.controls.Text;
-
-import rpc.GameRpc;
-
 public class PlayersPanelItem extends Sprite {
 	private var _playerName:String;
 	private var _playerKey:String;

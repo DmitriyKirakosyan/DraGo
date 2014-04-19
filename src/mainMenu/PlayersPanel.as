@@ -11,9 +11,6 @@ import flash.text.TextFieldAutoSize;
 
 import game.staticModel.UserState;
 
-import game.staticModel.UserState;
-
-import mx.controls.Text;
 
 public class PlayersPanel extends Sprite {
 	private const WIDTH:int = 200;
